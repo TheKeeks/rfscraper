@@ -93,7 +93,9 @@ COUNTRIES = sorted([
     "Ukraine", "United Kingdom", "United States", "Viet Nam", "Vietnam",
 ], key=len, reverse=True)
 
-COMPANY_HREF = re.compile(r"/companies/(\d+)/([^/?#\"']+)")
+# The site emits these links relative ("companies/1554/accubeat") as of mid-2026;
+# no leading slash in the pattern so both relative and absolute hrefs match.
+COMPANY_HREF = re.compile(r"companies/(\d+)/([^/?#\"']+)")
 PHONE_RE = re.compile(r"[\+\(]?\d[\d\s\-\(\)\.]{6,}\d")
 COUNT_RE = re.compile(r"\(([\d,]+)\)")
 
@@ -182,9 +184,13 @@ def enumerate_companies(session):
             low = html.lower()
             print(f"  [diagnose] page 1 returned no company links.")
             print(f"  [diagnose] HTTP body length: {len(html)} chars; "
-                  f"'/companies/' substrings in raw HTML: {html.count('/companies/')}")
-            for marker in ("just a moment", "cf-chl", "cloudflare", "enable javascript",
-                           "captcha", "access denied", "are you a robot", "/cdn-cgi/"):
+                  f"'companies/' substrings in raw HTML: {low.count('companies/')}")
+            # Only markers unique to an actual challenge page. Strings like
+            # 'cloudflare' or '/cdn-cgi/' appear on every page the Cloudflare CDN
+            # serves, including normal ones, and previously caused a false alarm.
+            for marker in ("just a moment", "cf-chl", "challenge-platform",
+                           "enable javascript and cookies", "captcha",
+                           "access denied", "are you a robot"):
                 if marker in low:
                     print(f"  [diagnose] page looks like a block/challenge — found marker: {marker!r}")
             print("  [diagnose] first 800 chars of what the server returned:")
@@ -221,6 +227,17 @@ def parse_detail(html, base_record):
     if h1 and h1.get_text(strip=True):
         rec["name"] = h1.get_text(strip=True)
 
+    # The detail page carries schema.org microdata — use it before falling back
+    # to the positional header-line heuristics below.
+    tel = soup.find(attrs={"itemprop": "telephone"})
+    if tel and tel.get_text(strip=True):
+        rec["phone"] = tel.get_text(strip=True)
+    addr = soup.find(attrs={"itemprop": "address"})
+    if addr and addr.get_text(strip=True):
+        rec["address"] = addr.get_text(" ", strip=True)
+        if not rec["country"]:
+            rec["country"] = match_country(rec["address"])
+
     # Header contact block: classify the short lines that sit just under the h1.
     header_lines = []
     if h1:
@@ -247,31 +264,41 @@ def parse_detail(html, base_record):
     # City / state from address (best-effort; tuned for "City, ST ZIP, Country")
     if rec["address"]:
         parts = [p.strip() for p in rec["address"].split(",")]
-        if parts and match_country(parts[-1]):
+        if parts and (match_country(parts[-1])
+                      or parts[-1].replace(".", "").upper() in ("USA", "US", "UK")):
             parts = parts[:-1]
         if len(parts) >= 2:
             rec["city"] = parts[-2]
             m = re.match(r"([A-Za-z\.\s]+)\s+\d", parts[-1])
             rec["state_region"] = (m.group(1).strip() if m else parts[-1])
 
-    # Website ("Visit Website" link)
-    wa = soup.find("a", string=re.compile(r"Visit Website", re.I))
-    if not wa:
-        wa = soup.find("a", href=re.compile(r"utm_source=everythingrf"))
+    # Website ("Visit Website" button). The anchor has an icon inside it, so match
+    # on the anchor's full text, not string=. Fallback regexes are case-insensitive
+    # because the real link uses utm_source=everythingRF while footer ads to sister
+    # sites use lowercase — a case-sensitive match used to grab the wrong domain.
+    wa = (soup.find("a", id="ContentPlaceHolder1_hlnkManuWebsite")
+          or soup.find("a", attrs={"itemprop": "url"})
+          or soup.find(lambda t: t.name == "a"
+                       and "visit website" in t.get_text(" ", strip=True).lower()))
     if wa and wa.get("href"):
         rec["website"] = strip_tracking(wa["href"])
 
-    # LinkedIn
-    li = soup.find("a", href=re.compile(r"linkedin\.com/company", re.I))
-    if li:
-        rec["linkedin"] = li["href"]
-
-    # Description: the first substantial paragraph in the main content.
-    for p in soup.find_all("p"):
-        t = p.get_text(" ", strip=True)
-        if len(t) > 120:
-            rec["description"] = t
+    # LinkedIn — skip everythingRF's own footer link.
+    for li in soup.find_all("a", href=re.compile(r"linkedin\.com/company", re.I)):
+        if "everythingrf" not in li["href"].lower():
+            rec["linkedin"] = li["href"]
             break
+
+    # Description: the company-overview block, else the first substantial paragraph.
+    ov = soup.find(id="pnlOverviewText") or soup.find("span", class_="description")
+    if ov and len(ov.get_text(" ", strip=True)) > 40:
+        rec["description"] = ov.get_text(" ", strip=True)
+    else:
+        for p in soup.find_all("p"):
+            t = p.get_text(" ", strip=True)
+            if len(t) > 120:
+                rec["description"] = t
+                break
 
     # Categories Supported: links to /directory/ under that heading.
     cats = []
