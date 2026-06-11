@@ -1,0 +1,1817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RF &amp; Microwave — Coverage Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#23283C; --gold:#CFA052; --brick:#8B2C2C;
+    --paper:#F7F8FA; --panel:#FFFFFF; --line:#E3E5EA; --muted:#6B7280; --text:#1B1E2B;
+    /* breadth ramp: narrow & deep -> broad. monochrome navy = "more breadth, darker" */
+    --b1:#AEB8C7; --b2:#6E7E96; --b3:#3C4A63; --b4:#23283C;
+    --sans:-apple-system,"Segoe UI","Aptos",Roboto,Arial,sans-serif;
+    --serif:"EB Garamond",Georgia,serif;
+    --mono:"SF Mono","Cascadia Code",ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:var(--sans);color:var(--text);background:var(--paper);font-size:14px;line-height:1.45}
+  a{color:var(--ink)}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+  /* top bar */
+  header{background:var(--ink);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .wordmark{font-family:var(--serif);font-weight:600;font-size:20px;letter-spacing:.2px;line-height:1}
+  .wordmark small{display:block;font-family:var(--sans);font-weight:400;font-size:11px;letter-spacing:.12em;
+    text-transform:uppercase;color:#A9B0C2;margin-top:3px}
+  .grow{flex:1}
+  .pill{font-size:11px;border:1px solid #3A4156;color:#C7CDDA;padding:3px 9px;border-radius:999px;white-space:nowrap}
+  .btn{font:inherit;font-size:13px;background:var(--gold);color:#1c1b14;border:none;padding:7px 13px;border-radius:6px;
+    cursor:pointer;font-weight:600}
+  .btn:hover{filter:brightness(1.05)}
+  .btn.ghost{background:transparent;color:#E7EAF0;border:1px solid #3A4156}
+
+  /* tabs */
+  nav.tabs{display:flex;gap:2px;background:var(--ink);padding:0 20px}
+  nav.tabs button{font:inherit;font-size:13px;color:#AEB6C6;background:transparent;border:none;cursor:pointer;
+    padding:10px 14px;border-bottom:2px solid transparent}
+  nav.tabs button[aria-selected="true"]{color:#fff;border-bottom-color:var(--gold)}
+  nav.tabs button:hover{color:#fff}
+
+  main{padding:18px 20px 40px}
+  .view{display:none}
+  .view.active{display:block}
+
+  /* explore layout */
+  .explore{display:grid;grid-template-columns:248px 1fr;gap:20px;align-items:start}
+  .rail{position:sticky;top:14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+  .rail h3{margin:0 0 10px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .fgroup{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+  .fgroup:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+  .fgroup label.cap{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+  input[type=search],select{width:100%;font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:#fff}
+  input[type=search]:focus,select:focus{outline:2px solid var(--gold);outline-offset:0}
+  .check{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:13px;cursor:pointer}
+  .check input{accent-color:var(--ink);width:15px;height:15px}
+  .check .n{margin-left:auto;color:var(--muted);font-size:12px}
+  .clear{font-size:12px;color:var(--ink);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline}
+
+  /* spectrum signature */
+  .spectrum{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:16px}
+  .spectrum .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
+  .spectrum .top b{font-weight:600}
+  .spectrum .top span{color:var(--muted);font-size:12px}
+  .bar{display:flex;height:30px;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+  .seg{display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;cursor:pointer;
+    border:none;font:inherit;min-width:0;transition:opacity .12s}
+  .seg:hover{opacity:.85}
+  .seg.off{opacity:.3}
+  .legend{display:flex;gap:16px;margin-top:9px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+  .legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+  /* table */
+  .tablewrap{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .tablebar{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13px}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);cursor:pointer;white-space:nowrap;user-select:none}
+  th.sorted::after{content:" \25BE";color:var(--ink)}
+  th.sorted.asc::after{content:" \25B4"}
+  tbody tr:hover{background:#F4F6F9}
+  td.name{font-weight:600}
+  td.name a{cursor:pointer;text-decoration:none;border-bottom:1px dotted #aab}
+  .badge{display:inline-block;font-size:11px;color:#fff;padding:2px 8px;border-radius:999px;white-space:nowrap}
+  .cats{color:var(--muted);font-size:12.5px}
+  .chip{display:inline-block;background:#EEF1F5;border:1px solid var(--line);border-radius:5px;padding:1px 6px;
+    margin:1px 3px 1px 0;font-size:11.5px;color:#33384a}
+  .chip.hit{background:#FBF1DC;border-color:var(--gold);color:#6b5418}
+
+  /* similarity */
+  .simwrap{max-width:920px}
+  .pickrow{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:16px}
+  .pickrow .fgroup{min-width:280px;margin:0;border:none;padding:0}
+  .anchor{background:var(--ink);color:#fff;border-radius:10px;padding:14px 16px;margin-bottom:14px}
+  .anchor h2{margin:0 0 4px;font-size:18px}
+  .anchor .meta{color:#B7BECC;font-size:13px}
+  .simrow{display:grid;grid-template-columns:200px 1fr 120px;gap:14px;align-items:center;padding:12px 14px;
+    border:1px solid var(--line);border-radius:9px;margin-bottom:8px;background:var(--panel)}
+  .simrow .co{font-weight:600}
+  .simrow .co small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+  .simbar{height:7px;background:#EEF1F5;border-radius:4px;overflow:hidden}
+  .simbar i{display:block;height:100%;background:var(--gold)}
+  .simrow .score{text-align:right;color:var(--muted);font-size:12px}
+  .simrow .score b{display:block;color:var(--ink);font-size:15px}
+
+  /* fragmentation */
+  .fragwrap{max-width:1000px}
+  .note{color:var(--muted);font-size:13px;margin:0 0 14px;max-width:640px}
+  .frag-hi{color:#fff;background:var(--brick)} .frag-md{color:#5a4a1f;background:#F3E2BC} .frag-lo{color:#33384a;background:#E7EAF0}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:0}
+
+  .empty{padding:40px;text-align:center;color:var(--muted)}
+  @media (max-width:780px){ .explore{grid-template-columns:1fr} .rail{position:static} .simrow{grid-template-columns:1fr} }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+  /* access gate */
+  #gate{display:none;position:fixed;inset:0;z-index:1000;background:var(--ink);align-items:center;justify-content:center;padding:20px}
+  .gatecard{background:var(--panel);border-radius:12px;padding:28px;width:min(360px,92vw);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .gatemark{font-family:var(--serif);font-weight:600;font-size:22px;color:var(--ink);margin-bottom:18px}
+  .gatecard label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;text-align:left}
+  .gatecard input{width:100%;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:8px;margin-bottom:12px}
+  .gatecard input:focus{outline:2px solid var(--gold)}
+  .gatecard .btn{width:100%}
+  #gate-err{display:none;color:var(--brick);font-size:13px;margin:10px 0 0}
+  .gatenote{color:var(--muted);font-size:11.5px;margin:14px 0 0;line-height:1.4}
+
+</style>
+</head>
+<body>
+<div id="gate" role="dialog" aria-modal="true" aria-label="Enter password">
+  <form class="gatecard" onsubmit="return false">
+    <div class="gatemark">RF &amp; Microwave</div>
+    <label for="gate-pw">Enter password to view</label>
+    <input id="gate-pw" type="password" autocomplete="current-password">
+    <button id="gate-go" type="submit" class="btn">Unlock</button>
+    <p id="gate-err">Incorrect password.</p>
+    <p class="gatenote">Internal preview. This is a light access gate, not a security boundary.</p>
+  </form>
+</div>
+<header>
+  <div class="wordmark">RF &amp; Microwave<small>Coverage Map</small></div>
+  <span class="pill" id="count">—</span>
+  <span class="pill" title="This build ships with illustrative sample data. The daily refresh replaces it with the live everythingRF pull.">Illustrative sample · live data via daily refresh</span>
+  <div class="grow"></div>
+  <span class="pill mono" id="asof">—</span>
+  <button class="btn" id="dl">Download CSV</button>
+</header>
+<nav class="tabs" role="tablist">
+  <button role="tab" aria-selected="true" data-view="explore">Explore</button>
+  <button role="tab" aria-selected="false" data-view="similar">Capability adjacency</button>
+  <button role="tab" aria-selected="false" data-view="frag">Fragmentation</button>
+</nav>
+
+<main>
+  <!-- EXPLORE -->
+  <section class="view active" id="view-explore">
+    <div class="spectrum">
+      <div class="top"><b>Specialist → Platform</b><span id="spec-sub">breadth of product coverage · click a band to filter</span></div>
+      <div class="bar" id="specbar"></div>
+      <div class="legend">
+        <span><i style="background:var(--b1)"></i>Specialist · 1–2 categories</span>
+        <span><i style="background:var(--b2)"></i>Focused · 3–6</span>
+        <span><i style="background:var(--b3)"></i>Broadline · 7–14</span>
+        <span><i style="background:var(--b4)"></i>Platform · 15+</span>
+      </div>
+    </div>
+    <div class="explore">
+      <aside class="rail">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <h3 style="margin:0">Filters</h3><button class="clear" id="clearall">Reset</button>
+        </div>
+        <div class="fgroup"><label class="cap">Search name</label>
+          <input type="search" id="q" placeholder="e.g. waveguide, antenna…" autocomplete="off"></div>
+        <div class="fgroup"><label class="cap">Breadth band</label><div id="f-band"></div></div>
+        <div class="fgroup"><label class="cap">Category contains</label>
+          <select id="f-cat"><option value="">Any category</option></select></div>
+        <div class="fgroup"><label class="cap">Country</label><div id="f-country"></div></div>
+        <div class="fgroup"><label class="cap">Certification</label><div id="f-cert"></div></div>
+        <div class="fgroup"><label class="cap">End market</label><div id="f-market"></div></div>
+      </aside>
+      <div>
+        <div class="tablewrap">
+          <div class="tablebar"><span id="result-n" class="mono"></span><span class="grow"></span>
+            <span style="color:var(--muted)">Click a company to see its closest peers →</span></div>
+          <div style="overflow-x:auto"><table id="tbl">
+            <thead><tr>
+              <th data-k="name">Company</th><th data-k="country">Country</th>
+              <th data-k="num_categories">Breadth</th><th data-k="num_categories">#Cats</th>
+              <th>Categories</th><th>Certs</th><th data-k="total_products">Products</th><th></th>
+            </tr></thead><tbody id="tbody"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SIMILARITY -->
+  <section class="view" id="view-similar">
+    <div class="simwrap">
+      <p class="note">Pick a company; everyone else is ranked by how much their product-category footprint overlaps with it
+        (Jaccard overlap). High overlap = the natural strategic buyers, merger-of-equals partners, or your comp set.</p>
+      <div class="pickrow"><div class="fgroup" style="flex:1"><label class="cap">Anchor company</label>
+        <select id="sim-pick"></select></div></div>
+      <div id="sim-anchor"></div>
+      <div id="sim-list"></div>
+    </div>
+  </section>
+
+  <!-- FRAGMENTATION -->
+  <section class="view" id="view-frag">
+    <div class="fragwrap">
+      <p class="note">Each product category, by how many players compete in it and how the depth is distributed.
+        Many players, a high share of single-line specialists, and no broad platform incumbent = a fragmented category
+        and a candidate roll-up thesis. Click a category to see its players in Explore.</p>
+      <div class="tablewrap"><div style="overflow-x:auto"><table id="fragtbl">
+        <thead><tr>
+          <th data-fk="cat">Category</th><th data-fk="players">Players</th>
+          <th data-fk="specShare">Specialist share</th><th data-fk="hasPlatform">Platform incumbent</th>
+          <th data-fk="score">Roll-up read</th>
+        </tr></thead><tbody id="fragbody"></tbody>
+      </table></div></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const EMBEDDED_SAMPLE = /*__DATA__*/[
+ {
+  "id": "1000",
+  "name": "Cobalt Components Inc",
+  "country": "China",
+  "city": "",
+  "state": "",
+  "website": "https://cobalt-rf.example.com",
+  "categories": [
+   "Circulators",
+   "Horn Antennas",
+   "Isolators",
+   "Waveguide Components",
+   "Waveguide Filters"
+  ],
+  "num_categories": 5,
+  "total_products": 131,
+  "certifications": [
+   "ITAR",
+   "RoHS",
+   "AS9100"
+  ],
+  "end_markets": [
+   "Defense/Military",
+   "SATCOM",
+   "Space"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1000/cobalt"
+ },
+ {
+  "id": "1001",
+  "name": "Vanguard Technologies LLC",
+  "country": "China",
+  "city": "",
+  "state": "",
+  "website": "https://vanguard-rf.example.com",
+  "categories": [
+   "Circulators",
+   "Horn Antennas",
+   "Isolators",
+   "Orthomode Transducers",
+   "Waveguide Filters"
+  ],
+  "num_categories": 5,
+  "total_products": 124,
+  "certifications": [
+   "ISO 9001:2015",
+   "AS9100"
+  ],
+  "end_markets": [
+   "Defense/Military",
+   "SATCOM",
+   "Space"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1001/vanguard"
+ },
+ {
+  "id": "1002",
+  "name": "Helix Components LLC",
+  "country": "Japan",
+  "city": "",
+  "state": "",
+  "website": "https://helix-rf.example.com",
+  "categories": [
+   "Noise Sources",
+   "Signal Generators"
+  ],
+  "num_categories": 2,
+  "total_products": 137,
+  "certifications": [
+   "ITAR",
+   "RoHS"
+  ],
+  "end_markets": [
+   "Test & Measurement"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1002/helix"
+ },
+ {
+  "id": "1003",
+  "name": "Triton Frequency Labs",
+  "country": "United States",
+  "city": "",
+  "state": "NY",
+  "website": "https://triton-rf.example.com",
+  "categories": [
+   "Circulators",
+   "Isolators",
+   "Waveguide Components"
+  ],
+  "num_categories": 3,
+  "total_products": 111,
+  "certifications": [
+   "RoHS",
+   "ISO 13485"
+  ],
+  "end_markets": [
+   "Defense/Military",
+   "SATCOM",
+   "Space"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1003/triton"
+ },
+ {
+  "id": "1004",
+  "name": "Aperture Devices",
+  "country": "France",
+  "city": "",
+  "state": "",
+  "website": "https://aperture-rf.example.com",
+  "categories": [
+   "Mixers",
+   "Transistors"
+  ],
+  "num_categories": 2,
+  "total_products": 172,
+  "certifications": [
+   "AS9100"
+  ],
+  "end_markets": [
+   "Commercial",
+   "Defense/Military",
+   "Wireless Infrastructure"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1004/aperture"
+ },
+ {
+  "id": "1005",
+  "name": "Meridian Waveguide",
+  "country": "United States",
+  "city": "",
+  "state": "AZ",
+  "website": "https://meridian-rf.example.com",
+  "categories": [
+   "Block Upconverters",
+   "Cable Assemblies",
+   "Chip Antennas",
+   "Connectors",
+   "Orthomode Transducers",
+   "Patch Antennas",
+   "Power Meters",
+   "RFID Antennas",
+   "SATCOM Antennas",
+   "Signal Generators",
+   "Transceivers",
+   "Vector Network Analyzers",
+   "Waveguide Filters"
+  ],
+  "num_categories": 13,
+  "total_products": 812,
+  "certifications": [
+   "AS9100",
+   "ITAR",
+   "ISO 13485"
+  ],
+  "end_markets": [
+   "Automotive",
+   "Commercial",
+   "Defense/Military",
+   "GPS/GNSS",
+   "IoT",
+   "SATCOM",
+   "Space",
+   "Test & Measurement"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1005/meridian"
+ },
+ {
+  "id": "1006",
+  "name": "Cascade Frequency Group",
+  "country": "Israel",
+  "city": "",
+  "state": "",
+  "website": "https://cascade-rf.example.com",
+  "categories": [
+   "Power Amplifiers"
+  ],
+  "num_categories": 1,
+  "total_products": 87,
+  "certifications": [
+   "RoHS",
+   "ISO 9001:2015",
+   "IATF 16949"
+  ],
+  "end_markets": [
+   "Commercial",
+   "Defense/Military",
+   "Wireless Infrastructure"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1006/cascade"
+ },
+ {
+  "id": "1007",
+  "name": "Apex Instruments",
+  "country": "Sweden",
+  "city": "",
+  "state": "",
+  "website": "https://apex-rf.example.com",
+  "categories": [
+   "Noise Sources",
+   "Power Meters",
+   "Signal Generators",
+   "Spectrum Analyzers"
+  ],
+  "num_categories": 4,
+  "total_products": 109,
+  "certifications": [],
+  "end_markets": [
+   "Test & Measurement"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1007/apex"
+ },
+ {
+  "id": "1008",
+  "name": "Sierra Antenna Systems Labs",
+  "country": "United States",
+  "city": "",
+  "state": "MA",
+  "website": "https://sierra-rf.example.com",
+  "categories": [
+   "Amplifiers",
+   "Low Noise Amplifiers",
+   "Mixers"
+  ],
+  "num_categories": 3,
+  "total_products": 314,
+  "certifications": [
+   "AS9100"
+  ],
+  "end_markets": [
+   "Commercial",
+   "Defense/Military",
+   "Wireless Infrastructure"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1008/sierra"
+ },
+ {
+  "id": "1009",
+  "name": "Photon Frequency Inc",
+  "country": "Sweden",
+  "city": "",
+  "state": "",
+  "website": "https://photon-rf.example.com",
+  "categories": [
+   "Horn Antennas",
+   "Isolators",
+   "Waveguide Filters"
+  ],
+  "num_categories": 3,
+  "total_products": 135,
+  "certifications": [
+   "AS9100"
+  ],
+  "end_markets": [
+   "Defense/Military",
+   "SATCOM",
+   "Space"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1009/photon"
+ },
+ {
+  "id": "1010",
+  "name": "Tantalus RF Systems Inc",
+  "country": "United States",
+  "city": "",
+  "state": "MA",
+  "website": "https://tantalus-rf.example.com",
+  "categories": [
+   "Antennas",
+   "Chip Antennas",
+   "GPS/GNSS Antennas",
+   "Power Meters",
+   "RF Over Fiber Modules",
+   "RFID Antennas",
+   "SATCOM Antennas",
+   "SATCOM Terminals",
+   "Signal Generators",
+   "Spectrum Analyzers",
+   "Vector Network Analyzers"
+  ],
+  "num_categories": 11,
+  "total_products": 869,
+  "certifications": [
+   "ISO 13485",
+   "AS9100"
+  ],
+  "end_markets": [
+   "Automotive",
+   "Defense/Military",
+   "GPS/GNSS",
+   "IoT",
+   "SATCOM",
+   "Space",
+   "Test & Measurement"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1010/tantalus"
+ },
+ {
+  "id": "1011",
+  "name": "Vector Photonics Group",
+  "country": "China",
+  "city": "",
+  "state": "",
+  "website": "https://vector-rf.example.com",
+  "categories": [
+   "Horn Antennas",
+   "Isolators",
+   "Low Noise Amplifiers",
+   "Mixers",
+   "Phase Shifters",
+   "RF Over Fiber Modules",
+   "SATCOM Antennas",
+   "SATCOM Terminals",
+   "Transceivers",
+   "Transistors"
+  ],
+  "num_categories": 10,
+  "total_products": 277,
+  "certifications": [
+   "ITAR",
+   "AS9100"
+  ],
+  "end_markets": [
+   "Commercial",
+   "Defense/Military",
+   "SATCOM",
+   "Space",
+   "Wireless Infrastructure"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1011/vector"
+ },
+ {
+  "id": "1012",
+  "name": "Halcyon Frequency Corp",
+  "country": "United States",
+  "city": "",
+  "state": "MN",
+  "website": "https://halcyon-rf.example.com",
+  "categories": [
+   "Block Upconverters",
+   "RF Over Fiber Modules",
+   "SATCOM Antennas",
+   "SATCOM Terminals",
+   "Transceivers"
+  ],
+  "num_categories": 5,
+  "total_products": 468,
+  "certifications": [
+   "AS9100",
+   "IATF 16949"
+  ],
+  "end_markets": [
+   "Defense/Military",
+   "SATCOM",
+   "Space"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1012/halcyon"
+ },
+ {
+  "id": "1013",
+  "name": "Orion Semiconductors",
+  "country": "Canada",
+  "city": "",
+  "state": "",
+  "website": "https://orion-rf.example.com",
+  "categories": [
+   "Phase Shifters"
+  ],
+  "num_categories": 1,
+  "total_products": 80,
+  "certifications": [
+   "AS9100"
+  ],
+  "end_markets": [
+   "Commercial",
+   "Defense/Military",
+   "Wireless Infrastructure"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1013/orion"
+ },
+ {
+  "id": "1014",
+  "name": "Beacon Antenna Systems Labs",
+  "country": "United Kingdom",
+  "city": "",
+  "state": "",
+  "website": "https://beacon-rf.example.com",
+  "categories": [
+   "Signal Generators",
+   "Vector Network Analyzers"
+  ],
+  "num_categories": 2,
+  "total_products": 218,
+  "certifications": [
+   "ISO 9001:2015",
+   "AS9100",
+   "ISO 13485"
+  ],
+  "end_markets": [
+   "Test & Measurement"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1014/beacon"
+ },
+ {
+  "id": "1015",
+  "name": "Lumen Microwave LLC",
+  "country": "Germany",
+  "city": "",
+  "state": "",
+  "website": "https://lumen-rf.example.com",
+  "categories": [
+   "Band Pass Filters",
+   "Chip Antennas",
+   "Circulators",
+   "Crystal Oscillators",
+   "Diplexers",
+   "Duplexers",
+   "GPS/GNSS Antennas",
+   "Low Noise Amplifiers",
+   "Low Pass Filters",
+   "Mixers",
+   "Noise Sources",
+   "RF Over Fiber Modules",
+   "RFID Antennas",
+   "SATCOM Terminals",
+   "Signal Generators",
+   "Switches",
+   "TCXO",
+   "Waveguide Filters"
+  ],
+  "num_categories": 18,
+  "total_products": 1105,
+  "certifications": [
+   "IATF 16949",
+   "ISO 13485",
+   "AS9100"
+  ],
+  "end_markets": [
+   "Automotive",
+   "Commercial",
+   "Defense/Military",
+   "GPS/GNSS",
+   "IoT",
+   "SATCOM",
+   "Space",
+   "Test & Measurement",
+   "Wireless Infrastructure"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1015/lumen"
+ },
+ {
+  "id": "1016",
+  "name": "Axiom Microwave Labs",
+  "country": "France",
+  "city": "",
+  "state": "",
+  "website": "https://axiom-rf.example.com",
+  "categories": [
+   "Amplifiers",
+   "Low Noise Amplifiers",
+   "Power Amplifiers",
+   "Switches",
+   "Transistors"
+  ],
+  "num_categories": 5,
+  "total_products": 94,
+  "certifications": [
+   "ISO 9001:2015",
+   "ITAR",
+   "IATF 16949"
+  ],
+  "end_markets": [
+   "Commercial",
+   "Defense/Military",
+   "Wireless Infrastructure"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1016/axiom"
+ },
+ {
+  "id": "1017",
+  "name": "Pinnacle Microsystems Inc",
+  "country": "Israel",
+  "city": "",
+  "state": "",
+  "website": "https://pinnacle-rf.example.com",
+  "categories": [
+   "Orthomode Transducers",
+   "Waveguide Components"
+  ],
+  "num_categories": 2,
+  "total_products": 140,
+  "certifications": [
+   "ISO 9001:2015",
+   "AS9100"
+  ],
+  "end_markets": [
+   "Defense/Military",
+   "SATCOM",
+   "Space"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1017/pinnacle"
+ },
+ {
+  "id": "1018",
+  "name": "Borealis Microsystems Group",
+  "country": "Israel",
+  "city": "",
+  "state": "",
+  "website": "https://borealis-rf.example.com",
+  "categories": [
+   "Antennas",
+   "Chip Antennas",
+   "GPS/GNSS Antennas",
+   "Patch Antennas",
+   "RFID Antennas"
+  ],
+  "num_categories": 5,
+  "total_products": 468,
+  "certifications": [
+   "ISO 13485",
+   "AS9100"
+  ],
+  "end_markets": [
+   "Automotive",
+   "GPS/GNSS",
+   "IoT"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1018/borealis"
+ },
+ {
+  "id": "1019",
+  "name": "Quanta Waveguide Labs",
+  "country": "United States",
+  "city": "",
+  "state": "FL",
+  "website": "https://quanta-rf.example.com",
+  "categories": [
+   "GPS/GNSS Antennas",
+   "Power Meters",
+   "RFID Antennas",
+   "Signal Generators",
+   "Spectrum Analyzers"
+  ],
+  "num_categories": 5,
+  "total_products": 112,
+  "certifications": [
+   "RoHS"
+  ],
+  "end_markets": [
+   "Automotive",
+   "GPS/GNSS",
+   "IoT",
+   "Test & Measurement"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1019/quanta"
+ },
+ {
+  "id": "1020",
+  "name": "Spectra Waveguide Labs",
+  "country": "China",
+  "city": "",
+  "state": "",
+  "website": "https://spectra-rf.example.com",
+  "categories": [
+   "Antennas",
+   "Block Upconverters",
+   "Crystal Oscillators",
+   "GPS/GNSS Antennas",
+   "Isolators",
+   "Noise Sources",
+   "Orthomode Transducers",
+   "Patch Antennas",
+   "RFID Antennas",
+   "Resonators",
+   "SATCOM Antennas",
+   "Signal Generators",
+   "Transceivers",
+   "VCXO",
+   "Vector Network Analyzers"
+  ],
+  "num_categories": 15,
+  "total_products": 1525,
+  "certifications": [
+   "ISO 13485",
+   "ISO 9001:2015",
+   "AS9100"
+  ],
+  "end_markets": [
+   "Automotive",
+   "Commercial",
+   "Defense/Military",
+   "GPS/GNSS",
+   "IoT",
+   "SATCOM",
+   "Space",
+   "Test & Measurement",
+   "Wireless Infrastructure"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1020/spectra"
+ },
+ {
+  "id": "1021",
+  "name": "Cygnus Antenna Systems Inc",
+  "country": "United States",
+  "city": "",
+  "state": "PA",
+  "website": "https://cygnus-rf.example.com",
+  "categories": [
+   "Circulators",
+   "Isolators",
+   "Waveguide Components",
+   "Waveguide Filters"
+  ],
+  "num_categories": 4,
+  "total_products": 264,
+  "certifications": [
+   "ITAR",
+   "IATF 16949",
+   "AS9100"
+  ],
+  "end_markets": [
+   "Defense/Military",
+   "SATCOM",
+   "Space"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1021/cygnus"
+ },
+ {
+  "id": "1022",
+  "name": "Polaris Wireless Corp",
+  "country": "France",
+  "city": "",
+  "state": "",
+  "website": "https://polaris-rf.example.com",
+  "categories": [
+   "Adapters",
+   "Band Pass Filters",
+   "Chip Antennas",
+   "Connectors",
+   "Crystal Oscillators",
+   "DC Blocks",
+   "Diplexers",
+   "GPS/GNSS Antennas",
+   "Isolators",
+   "Patch Antennas",
+   "TCXO",
+   "Terminations",
+   "Waveguide Components"
+  ],
+  "num_categories": 13,
+  "total_products": 420,
+  "certifications": [
+   "AS9100"
+  ],
+  "end_markets": [
+   "Automotive",
+   "Commercial",
+   "Defense/Military",
+   "GPS/GNSS",
+   "IoT",
+   "SATCOM",
+   "Space",
+   "Test & Measurement",
+   "Wireless Infrastructure"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1022/polaris"
+ },
+ {
+  "id": "1023",
+  "name": "Nimbus RF Systems LLC",
+  "country": "China",
+  "city": "",
+  "state": "",
+  "website": "https://nimbus-rf.example.com",
+  "categories": [
+   "Waveguide Filters"
+  ],
+  "num_categories": 1,
+  "total_products": 26,
+  "certifications": [
+   "AS9100",
+   "ITAR",
+   "IATF 16949"
+  ],
+  "end_markets": [
+   "Defense/Military",
+   "SATCOM",
+   "Space"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1023/nimbus"
+ },
+ {
+  "id": "1024",
+  "name": "Verity Components Inc",
+  "country": "Israel",
+  "city": "",
+  "state": "",
+  "website": "https://verity-rf.example.com",
+  "categories": [
+   "Adapters",
+   "Cable Assemblies",
+   "DC Blocks",
+   "Noise Sources",
+   "Power Meters",
+   "SATCOM Antennas",
+   "SATCOM Terminals",
+   "Spectrum Analyzers",
+   "Terminations",
+   "Transceivers",
+   "Vector Network Analyzers"
+  ],
+  "num_categories": 11,
+  "total_products": 345,
+  "certifications": [
+   "AS9100"
+  ],
+  "end_markets": [
+   "Commercial",
+   "Defense/Military",
+   "SATCOM",
+   "Space",
+   "Test & Measurement"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1024/verity"
+ },
+ {
+  "id": "1025",
+  "name": "Granite Antenna Systems",
+  "country": "United States",
+  "city": "",
+  "state": "AZ",
+  "website": "https://granite-rf.example.com",
+  "categories": [
+   "Amplifiers",
+   "Mixers",
+   "Power Amplifiers",
+   "Transistors"
+  ],
+  "num_categories": 4,
+  "total_products": 387,
+  "certifications": [
+   "IATF 16949",
+   "AS9100"
+  ],
+  "end_markets": [
+   "Commercial",
+   "Defense/Military",
+   "Wireless Infrastructure"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1025/granite"
+ },
+ {
+  "id": "1026",
+  "name": "Onyx Spectrum Corp",
+  "country": "United States",
+  "city": "",
+  "state": "NH",
+  "website": "https://onyx-rf.example.com",
+  "categories": [
+   "Antennas",
+   "Chip Antennas",
+   "GPS/GNSS Antennas",
+   "Patch Antennas",
+   "RFID Antennas"
+  ],
+  "num_categories": 5,
+  "total_products": 225,
+  "certifications": [],
+  "end_markets": [
+   "Automotive",
+   "GPS/GNSS",
+   "IoT"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1026/onyx"
+ },
+ {
+  "id": "1027",
+  "name": "Zephyr Components Group",
+  "country": "United States",
+  "city": "",
+  "state": "AZ",
+  "website": "https://zephyr-rf.example.com",
+  "categories": [
+   "Mixers"
+  ],
+  "num_categories": 1,
+  "total_products": 16,
+  "certifications": [
+   "AS9100"
+  ],
+  "end_markets": [
+   "Commercial",
+   "Defense/Military",
+   "Wireless Infrastructure"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1027/zephyr"
+ },
+ {
+  "id": "1028",
+  "name": "Argon Photonics Group",
+  "country": "Taiwan",
+  "city": "",
+  "state": "",
+  "website": "https://argon-rf.example.com",
+  "categories": [
+   "Antennas",
+   "OCXO",
+   "RFID Antennas",
+   "VCXO"
+  ],
+  "num_categories": 4,
+  "total_products": 41,
+  "certifications": [],
+  "end_markets": [
+   "Automotive",
+   "Commercial",
+   "GPS/GNSS",
+   "IoT",
+   "Wireless Infrastructure"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1028/argon"
+ },
+ {
+  "id": "1029",
+  "name": "Crestline Photonics",
+  "country": "France",
+  "city": "",
+  "state": "",
+  "website": "https://crestline-rf.example.com",
+  "categories": [
+   "Chip Antennas",
+   "GPS/GNSS Antennas",
+   "RFID Antennas"
+  ],
+  "num_categories": 3,
+  "total_products": 123,
+  "certifications": [],
+  "end_markets": [
+   "Automotive",
+   "GPS/GNSS",
+   "IoT"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1029/crestline"
+ },
+ {
+  "id": "1030",
+  "name": "Ironwood Semiconductors LLC",
+  "country": "United States",
+  "city": "",
+  "state": "PA",
+  "website": "https://ironwood-rf.example.com",
+  "categories": [
+   "Adapters",
+   "Band Pass Filters",
+   "Connectors",
+   "DC Blocks",
+   "Diplexers",
+   "Duplexers",
+   "Low Noise Amplifiers",
+   "Low Pass Filters",
+   "Power Amplifiers",
+   "Switches",
+   "Terminations",
+   "Transistors"
+  ],
+  "num_categories": 12,
+  "total_products": 158,
+  "certifications": [
+   "IATF 16949"
+  ],
+  "end_markets": [
+   "Commercial",
+   "Defense/Military",
+   "Test & Measurement",
+   "Wireless Infrastructure"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1030/ironwood"
+ },
+ {
+  "id": "1031",
+  "name": "Sable Microwave",
+  "country": "United States",
+  "city": "",
+  "state": "MA",
+  "website": "https://sable-rf.example.com",
+  "categories": [
+   "Patch Antennas"
+  ],
+  "num_categories": 1,
+  "total_products": 84,
+  "certifications": [],
+  "end_markets": [
+   "Automotive",
+   "GPS/GNSS",
+   "IoT"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1031/sable"
+ },
+ {
+  "id": "1032",
+  "name": "Wavelan Microsystems Group",
+  "country": "Sweden",
+  "city": "",
+  "state": "",
+  "website": "https://wavelan-rf.example.com",
+  "categories": [
+   "Circulators",
+   "Frequency Synthesizers",
+   "Isolators",
+   "Low Pass Filters",
+   "Waveguide Components",
+   "Waveguide Filters"
+  ],
+  "num_categories": 6,
+  "total_products": 466,
+  "certifications": [
+   "IATF 16949",
+   "ISO 9001:2015",
+   "AS9100"
+  ],
+  "end_markets": [
+   "Defense/Military",
+   "SATCOM",
+   "Space",
+   "Wireless Infrastructure"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1032/wavelan"
+ },
+ {
+  "id": "1033",
+  "name": "Calibre Technologies Inc",
+  "country": "United States",
+  "city": "",
+  "state": "CA",
+  "website": "https://calibre-rf.example.com",
+  "categories": [
+   "Chip Antennas",
+   "GPS/GNSS Antennas",
+   "Patch Antennas"
+  ],
+  "num_categories": 3,
+  "total_products": 171,
+  "certifications": [
+   "ITAR",
+   "ISO 13485",
+   "AS9100"
+  ],
+  "end_markets": [
+   "Automotive",
+   "GPS/GNSS",
+   "IoT"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1033/calibre"
+ },
+ {
+  "id": "1034",
+  "name": "Northwind Semiconductors Corp",
+  "country": "Germany",
+  "city": "",
+  "state": "",
+  "website": "https://northwind-rf.example.com",
+  "categories": [
+   "Circulators",
+   "Horn Antennas",
+   "Isolators",
+   "Orthomode Transducers",
+   "Waveguide Filters"
+  ],
+  "num_categories": 5,
+  "total_products": 538,
+  "certifications": [
+   "ISO 13485",
+   "AS9100"
+  ],
+  "end_markets": [
+   "Defense/Military",
+   "SATCOM",
+   "Space"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1034/northwind"
+ },
+ {
+  "id": "1035",
+  "name": "Solstice Semiconductors Inc",
+  "country": "Israel",
+  "city": "",
+  "state": "",
+  "website": "https://solstice-rf.example.com",
+  "categories": [
+   "Phase Shifters"
+  ],
+  "num_categories": 1,
+  "total_products": 104,
+  "certifications": [
+   "ITAR",
+   "IATF 16949",
+   "AS9100"
+  ],
+  "end_markets": [
+   "Commercial",
+   "Defense/Military",
+   "Wireless Infrastructure"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1035/solstice"
+ },
+ {
+  "id": "1036",
+  "name": "Tessera Antenna Systems Inc",
+  "country": "United States",
+  "city": "",
+  "state": "PA",
+  "website": "https://tessera-rf.example.com",
+  "categories": [
+   "Chip Antennas"
+  ],
+  "num_categories": 1,
+  "total_products": 36,
+  "certifications": [
+   "ISO 13485"
+  ],
+  "end_markets": [
+   "Automotive",
+   "GPS/GNSS",
+   "IoT"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1036/tessera"
+ },
+ {
+  "id": "1037",
+  "name": "Vireo RF Systems",
+  "country": "United States",
+  "city": "",
+  "state": "NY",
+  "website": "https://vireo-rf.example.com",
+  "categories": [
+   "Phase Shifters",
+   "Switches"
+  ],
+  "num_categories": 2,
+  "total_products": 98,
+  "certifications": [],
+  "end_markets": [
+   "Commercial",
+   "Defense/Military",
+   "Wireless Infrastructure"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1037/vireo"
+ },
+ {
+  "id": "1038",
+  "name": "Marlin Wireless LLC",
+  "country": "United States",
+  "city": "",
+  "state": "FL",
+  "website": "https://marlin-rf.example.com",
+  "categories": [
+   "Power Meters",
+   "Signal Generators",
+   "Spectrum Analyzers",
+   "Vector Network Analyzers"
+  ],
+  "num_categories": 4,
+  "total_products": 374,
+  "certifications": [],
+  "end_markets": [
+   "Test & Measurement"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1038/marlin"
+ },
+ {
+  "id": "1039",
+  "name": "Keystone RF Systems LLC",
+  "country": "United States",
+  "city": "",
+  "state": "NH",
+  "website": "https://keystone-rf.example.com",
+  "categories": [
+   "Amplifiers",
+   "Crystal Oscillators",
+   "MEMS Oscillators",
+   "Mixers",
+   "Power Amplifiers",
+   "Switches",
+   "VCXO"
+  ],
+  "num_categories": 7,
+  "total_products": 509,
+  "certifications": [
+   "AS9100"
+  ],
+  "end_markets": [
+   "Commercial",
+   "Defense/Military",
+   "IoT",
+   "Wireless Infrastructure"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1039/keystone"
+ },
+ {
+  "id": "1040",
+  "name": "Cerulean Waveguide LLC",
+  "country": "United Kingdom",
+  "city": "",
+  "state": "",
+  "website": "https://cerulean-rf.example.com",
+  "categories": [
+   "Amplifiers",
+   "Low Noise Amplifiers",
+   "Phase Shifters",
+   "Power Meters",
+   "Resonators",
+   "Transistors",
+   "VCXO",
+   "Vector Network Analyzers"
+  ],
+  "num_categories": 8,
+  "total_products": 460,
+  "certifications": [
+   "RoHS"
+  ],
+  "end_markets": [
+   "Commercial",
+   "Defense/Military",
+   "IoT",
+   "Test & Measurement",
+   "Wireless Infrastructure"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1040/cerulean"
+ },
+ {
+  "id": "1041",
+  "name": "Drake Microsystems LLC",
+  "country": "United States",
+  "city": "",
+  "state": "PA",
+  "website": "https://drake-rf.example.com",
+  "categories": [
+   "Low Noise Amplifiers",
+   "Mixers",
+   "Power Amplifiers",
+   "Switches"
+  ],
+  "num_categories": 4,
+  "total_products": 304,
+  "certifications": [
+   "ITAR",
+   "IATF 16949",
+   "AS9100"
+  ],
+  "end_markets": [
+   "Commercial",
+   "Defense/Military",
+   "Wireless Infrastructure"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1041/drake"
+ },
+ {
+  "id": "1042",
+  "name": "Fathom RF Systems LLC",
+  "country": "Israel",
+  "city": "",
+  "state": "",
+  "website": "https://fathom-rf.example.com",
+  "categories": [
+   "GPS/GNSS Antennas"
+  ],
+  "num_categories": 1,
+  "total_products": 54,
+  "certifications": [
+   "ISO 13485",
+   "AS9100"
+  ],
+  "end_markets": [
+   "Automotive",
+   "GPS/GNSS",
+   "IoT"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1042/fathom"
+ },
+ {
+  "id": "1043",
+  "name": "Halyard Components Labs",
+  "country": "United States",
+  "city": "",
+  "state": "PA",
+  "website": "https://halyard-rf.example.com",
+  "categories": [
+   "Noise Sources",
+   "Signal Generators",
+   "Spectrum Analyzers"
+  ],
+  "num_categories": 3,
+  "total_products": 51,
+  "certifications": [],
+  "end_markets": [
+   "Test & Measurement"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1043/halyard"
+ },
+ {
+  "id": "1044",
+  "name": "Juniper Antenna Systems Corp",
+  "country": "United Kingdom",
+  "city": "",
+  "state": "",
+  "website": "https://juniper-rf.example.com",
+  "categories": [
+   "Waveguide Components"
+  ],
+  "num_categories": 1,
+  "total_products": 29,
+  "certifications": [],
+  "end_markets": [
+   "Defense/Military",
+   "SATCOM",
+   "Space"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1044/juniper"
+ },
+ {
+  "id": "1045",
+  "name": "Kestrel Photonics Corp",
+  "country": "China",
+  "city": "",
+  "state": "",
+  "website": "https://kestrel-rf.example.com",
+  "categories": [
+   "MEMS Oscillators",
+   "TCXO"
+  ],
+  "num_categories": 2,
+  "total_products": 118,
+  "certifications": [],
+  "end_markets": [
+   "Commercial",
+   "IoT",
+   "Wireless Infrastructure"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1045/kestrel"
+ },
+ {
+  "id": "1046",
+  "name": "Lattice Spectrum LLC",
+  "country": "United Kingdom",
+  "city": "",
+  "state": "",
+  "website": "https://lattice-rf.example.com",
+  "categories": [
+   "MEMS Oscillators",
+   "Orthomode Transducers",
+   "Resonators",
+   "VCXO",
+   "Waveguide Components",
+   "Waveguide Filters"
+  ],
+  "num_categories": 6,
+  "total_products": 287,
+  "certifications": [
+   "ISO 13485",
+   "IATF 16949",
+   "AS9100"
+  ],
+  "end_markets": [
+   "Commercial",
+   "Defense/Military",
+   "IoT",
+   "SATCOM",
+   "Space",
+   "Wireless Infrastructure"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1046/lattice"
+ },
+ {
+  "id": "1047",
+  "name": "Magneto Instruments Group",
+  "country": "United States",
+  "city": "",
+  "state": "CA",
+  "website": "https://magneto-rf.example.com",
+  "categories": [
+   "Block Upconverters",
+   "SATCOM Antennas",
+   "SATCOM Terminals",
+   "Transceivers"
+  ],
+  "num_categories": 4,
+  "total_products": 32,
+  "certifications": [
+   "ISO 9001:2015",
+   "IATF 16949",
+   "RoHS"
+  ],
+  "end_markets": [
+   "Defense/Military",
+   "SATCOM",
+   "Space"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1047/magneto"
+ },
+ {
+  "id": "1048",
+  "name": "Nyx Waveguide LLC",
+  "country": "United States",
+  "city": "",
+  "state": "MA",
+  "website": "https://nyx-rf.example.com",
+  "categories": [
+   "RFID Antennas"
+  ],
+  "num_categories": 1,
+  "total_products": 15,
+  "certifications": [
+   "RoHS",
+   "IATF 16949",
+   "ISO 9001:2015"
+  ],
+  "end_markets": [
+   "Automotive",
+   "GPS/GNSS",
+   "IoT"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1048/nyx"
+ },
+ {
+  "id": "1049",
+  "name": "Obsidian Microsystems Group",
+  "country": "United States",
+  "city": "",
+  "state": "CO",
+  "website": "https://obsidian-rf.example.com",
+  "categories": [
+   "Antennas",
+   "Chip Antennas",
+   "GPS/GNSS Antennas",
+   "RFID Antennas"
+  ],
+  "num_categories": 4,
+  "total_products": 225,
+  "certifications": [
+   "ITAR",
+   "RoHS"
+  ],
+  "end_markets": [
+   "Automotive",
+   "GPS/GNSS",
+   "IoT"
+  ],
+  "profile_url": "https://www.everythingrf.com/companies/1049/obsidian"
+ }
+];
+
+let DATA = [];
+const bandName = n => n<=2 ? "Specialist" : n<=6 ? "Focused" : n<=14 ? "Broadline" : "Platform";
+const bandColor = {Specialist:"var(--b1)", Focused:"var(--b2)", Broadline:"var(--b3)", Platform:"var(--b4)"};
+const BANDS = ["Specialist","Focused","Broadline","Platform"];
+
+const state = {q:"", bands:new Set(), countries:new Set(), certs:new Set(), markets:new Set(),
+               cat:"", sortK:"num_categories", sortDir:-1};
+
+async function load(){
+  try{
+    const r = await fetch("companies.json", {cache:"no-store"});
+    if(!r.ok) throw 0;
+    DATA = await r.json();
+  }catch(e){ DATA = EMBEDDED_SAMPLE; }
+  DATA.forEach(d=>{ d.categories=d.categories||[]; d.certifications=d.certifications||[];
+    d.end_markets=d.end_markets||[]; d.num_categories=d.num_categories ?? d.categories.length; });
+  init();
+}
+
+function uniqCount(getter){
+  const m = new Map();
+  DATA.forEach(d=>{ const v=getter(d); (Array.isArray(v)?v:[v]).forEach(x=>{ if(x) m.set(x,(m.get(x)||0)+1); }); });
+  return [...m.entries()].sort((a,b)=> b[1]-a[1] || a[0].localeCompare(b[0]));
+}
+
+function checkList(elId, items, setRef){
+  const el = document.getElementById(elId); el.innerHTML="";
+  items.forEach(([val,n])=>{
+    const id = elId+"-"+val.replace(/\W/g,"");
+    const row = document.createElement("label"); row.className="check";
+    row.innerHTML = `<input type="checkbox" id="${id}"><span>${val}</span><span class="n mono">${n}</span>`;
+    row.querySelector("input").addEventListener("change", e=>{
+      e.target.checked ? setRef.add(val) : setRef.delete(val); render();
+    });
+    el.appendChild(row);
+  });
+}
+
+function init(){
+  document.getElementById("asof").textContent = "as of " + new Date().toISOString().slice(0,10);
+  // band filter (ordered, with counts)
+  const bandCounts = {}; BANDS.forEach(b=>bandCounts[b]=0);
+  DATA.forEach(d=>bandCounts[bandName(d.num_categories)]++);
+  checkList("f-band", BANDS.map(b=>[b,bandCounts[b]]), state.bands);
+  checkList("f-country", uniqCount(d=>d.country), state.countries);
+  checkList("f-cert", uniqCount(d=>d.certifications), state.certs);
+  checkList("f-market", uniqCount(d=>d.end_markets), state.markets);
+  const catSel = document.getElementById("f-cat");
+  uniqCount(d=>d.categories).forEach(([c,n])=> catSel.add(new Option(`${c} (${n})`, c)));
+  catSel.addEventListener("change", e=>{ state.cat=e.target.value; render(); });
+  document.getElementById("q").addEventListener("input", e=>{ state.q=e.target.value.toLowerCase(); render(); });
+  document.getElementById("clearall").addEventListener("click", reset);
+  document.querySelectorAll("#tbl th[data-k]").forEach(th=> th.addEventListener("click", ()=>{
+    const k=th.dataset.k; if(state.sortK===k) state.sortDir*=-1; else {state.sortK=k; state.sortDir=(k==="name"||k==="country")?1:-1;}
+    render();
+  }));
+  document.querySelectorAll("nav.tabs button").forEach(b=> b.addEventListener("click", ()=>switchView(b.dataset.view)));
+  document.getElementById("dl").addEventListener("click", downloadCSV);
+  const sp = document.getElementById("sim-pick");
+  [...DATA].sort((a,b)=>a.name.localeCompare(b.name)).forEach(d=> sp.add(new Option(d.name, d.id)));
+  sp.addEventListener("change", ()=>renderSim(sp.value));
+  document.querySelectorAll("#fragtbl th[data-fk]").forEach(th=> th.addEventListener("click", ()=>sortFrag(th.dataset.fk)));
+  document.getElementById("count").textContent = DATA.length + " companies";
+  buildFrag();
+  render(); renderSim(sp.value || (DATA[0] && DATA[0].id)); renderFrag();
+}
+
+function reset(){
+  state.q=""; state.cat=""; state.bands.clear(); state.countries.clear(); state.certs.clear(); state.markets.clear();
+  document.getElementById("q").value=""; document.getElementById("f-cat").value="";
+  document.querySelectorAll(".rail input[type=checkbox]").forEach(c=>c.checked=false);
+  render();
+}
+
+function filtered(){
+  return DATA.filter(d=>{
+    if(state.q && !d.name.toLowerCase().includes(state.q)) return false;
+    if(state.bands.size && !state.bands.has(bandName(d.num_categories))) return false;
+    if(state.countries.size && !state.countries.has(d.country)) return false;
+    if(state.cat && !d.categories.includes(state.cat)) return false;
+    if(state.certs.size && !d.certifications.some(c=>state.certs.has(c))) return false;
+    if(state.markets.size && !d.end_markets.some(m=>state.markets.has(m))) return false;
+    return true;
+  });
+}
+
+function render(){
+  const rows = filtered();
+  renderSpectrum(rows);
+  rows.sort((a,b)=>{
+    let x=a[state.sortK], y=b[state.sortK];
+    if(typeof x==="string"){ return state.sortDir*x.localeCompare(y); }
+    return state.sortDir*((x||0)-(y||0));
+  });
+  const tb = document.getElementById("tbody"); tb.innerHTML="";
+  document.getElementById("result-n").textContent = rows.length + " of " + DATA.length + " shown";
+  document.querySelectorAll("#tbl th").forEach(th=>th.classList.remove("sorted","asc"));
+  const sortedTh = [...document.querySelectorAll("#tbl th[data-k]")].find(th=>th.dataset.k===state.sortK);
+  if(sortedTh){ sortedTh.classList.add("sorted"); if(state.sortDir===1) sortedTh.classList.add("asc"); }
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="8"><div class="empty">No companies match these filters. Reset to start over.</div></td></tr>'; return; }
+  rows.forEach(d=>{
+    const bn = bandName(d.num_categories);
+    const cats = d.categories.slice(0,6).map(c=>`<span class="chip">${c}</span>`).join("")
+      + (d.categories.length>6 ? ` <span class="cats">+${d.categories.length-6}</span>` : "");
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td class="name"><a data-id="${d.id}">${d.name}</a></td>
+      <td>${d.country||"—"}</td>
+      <td><span class="badge" style="background:${bandColor[bn]}">${bn}</span></td>
+      <td class="mono">${d.num_categories}</td>
+      <td class="cats">${cats||"—"}</td>
+      <td class="cats">${d.certifications.join(", ")||"—"}</td>
+      <td class="mono">${(d.total_products||0).toLocaleString()}</td>
+      <td>${d.profile_url?`<a href="${d.profile_url}" target="_blank" rel="noopener">↗</a>`:""}</td>`;
+    tr.querySelector("a[data-id]").addEventListener("click", ()=>{ switchView("similar"); document.getElementById("sim-pick").value=d.id; renderSim(d.id); });
+    tb.appendChild(tr);
+  });
+}
+
+function renderSpectrum(rows){
+  const counts={}; BANDS.forEach(b=>counts[b]=0); rows.forEach(d=>counts[bandName(d.num_categories)]++);
+  const total=rows.length||1; const bar=document.getElementById("specbar"); bar.innerHTML="";
+  BANDS.forEach(b=>{
+    const pct=counts[b]/total*100;
+    const seg=document.createElement("button"); seg.className="seg"+(state.bands.size&&!state.bands.has(b)?" off":"");
+    seg.style.background=bandColor[b]; seg.style.flexBasis=pct+"%"; seg.title=`${b}: ${counts[b]} (${pct.toFixed(0)}%)`;
+    seg.textContent = pct>9 ? counts[b] : "";
+    seg.addEventListener("click", ()=>{ state.bands.has(b)?state.bands.delete(b):state.bands.add(b);
+      const cb=document.getElementById("f-band-"+b.replace(/\W/g,"")); if(cb) cb.checked=state.bands.has(b); render(); });
+    bar.appendChild(seg);
+  });
+}
+
+/* ---- capability adjacency ---- */
+function jaccard(a,b){ const A=new Set(a),B=new Set(b); let i=0; A.forEach(x=>{if(B.has(x))i++}); const u=A.size+B.size-i; return u?i/u:0; }
+function renderSim(id){
+  const anchor = DATA.find(d=>d.id===id) || DATA[0]; if(!anchor) return;
+  const bn=bandName(anchor.num_categories);
+  document.getElementById("sim-anchor").innerHTML =
+    `<div class="anchor"><h2>${anchor.name}</h2>
+       <div class="meta">${anchor.country||"—"} · <span class="badge" style="background:${bandColor[bn]}">${bn}</span>
+       · ${anchor.num_categories} categories · ${(anchor.total_products||0).toLocaleString()} products</div>
+       <div style="margin-top:9px">${anchor.categories.map(c=>`<span class="chip" style="background:#33384a;border-color:#454b61;color:#dfe3ec">${c}</span>`).join("")}</div></div>`;
+  const ranked = DATA.filter(d=>d.id!==anchor.id)
+    .map(d=>({d, s:jaccard(anchor.categories,d.categories),
+              shared:d.categories.filter(c=>anchor.categories.includes(c))}))
+    .filter(x=>x.s>0).sort((a,b)=> b.s-a.s).slice(0,12);
+  const list=document.getElementById("sim-list");
+  if(!ranked.length){ list.innerHTML='<div class="empty">No category overlap with any other company in this dataset.</div>'; return; }
+  list.innerHTML = ranked.map(x=>{
+    const bnx=bandName(x.d.num_categories);
+    const chips=x.shared.map(c=>`<span class="chip hit">${c}</span>`).join("");
+    return `<div class="simrow">
+      <div class="co">${x.d.name}<small>${x.d.country||"—"} · ${bnx}</small></div>
+      <div><div style="margin-bottom:6px">${chips}</div><div class="simbar"><i style="width:${(x.s*100).toFixed(0)}%"></i></div></div>
+      <div class="score"><b>${x.shared.length}</b>shared · ${(x.s*100).toFixed(0)}% overlap</div></div>`;
+  }).join("");
+}
+
+/* ---- fragmentation ---- */
+let FRAG=[], fragSortK="players", fragSortDir=-1;
+function buildFrag(){
+  const m=new Map();
+  DATA.forEach(d=> d.categories.forEach(c=>{
+    if(!m.has(c)) m.set(c,{cat:c,players:0,specialists:0,hasPlatform:false});
+    const r=m.get(c); r.players++; if(d.num_categories<=2) r.specialists++; if(bandName(d.num_categories)==="Platform") r.hasPlatform=true;
+  }));
+  FRAG=[...m.values()].map(r=>{
+    r.specShare = r.players ? r.specialists/r.players : 0;
+    // simple read: contested + specialist-heavy + no platform incumbent => fragmented
+    let score = r.players + r.specShare*6 + (r.hasPlatform?-5:0);
+    r.score = score;
+    r.read = (r.players>=7 && r.specShare>=0.4 && !r.hasPlatform) ? "High"
+           : (r.players>=4 && !r.hasPlatform) ? "Moderate" : "Low";
+    return r;
+  });
+}
+function sortFrag(k){ if(fragSortK===k) fragSortDir*=-1; else {fragSortK=k; fragSortDir=(k==="cat")?1:-1;} renderFrag(); }
+function renderFrag(){
+  const rows=[...FRAG].sort((a,b)=>{ let x=a[fragSortK],y=b[fragSortK];
+    if(typeof x==="string") return fragSortDir*x.localeCompare(y);
+    if(typeof x==="boolean"){x=x?1:0;y=y?1:0;} return fragSortDir*((x)-(y)); });
+  const cls={High:"frag-hi",Moderate:"frag-md",Low:"frag-lo"};
+  const body=document.getElementById("fragbody");
+  body.innerHTML = rows.map(r=>`<tr>
+    <td class="name" style="cursor:pointer"><a data-cat="${r.cat}">${r.cat}</a></td>
+    <td class="mono">${r.players}</td>
+    <td class="mono">${(r.specShare*100).toFixed(0)}%</td>
+    <td>${r.hasPlatform?'<span style="color:var(--brick)">●</span> yes':'<span style="color:var(--muted)">— none</span>'}</td>
+    <td><span class="badge ${cls[r.read]}">${r.read}</span></td></tr>`).join("");
+  body.querySelectorAll("a[data-cat]").forEach(a=> a.addEventListener("click", ()=>{
+    reset(); state.cat=a.dataset.cat; document.getElementById("f-cat").value=a.dataset.cat; switchView("explore"); render();
+  }));
+}
+
+function switchView(v){
+  document.querySelectorAll("nav.tabs button").forEach(b=> b.setAttribute("aria-selected", b.dataset.view===v));
+  document.querySelectorAll(".view").forEach(s=> s.classList.toggle("active", s.id==="view-"+v));
+  window.scrollTo({top:0, behavior:"instant"});
+}
+
+function downloadCSV(){
+  const rows=filtered();
+  const cols=["name","country","num_categories","categories","certifications","end_markets","total_products","website","profile_url"];
+  const head=["Company","Country","Num_Categories","Categories","Certifications","End_Markets","Total_Products","Website","Profile_URL"];
+  const esc=v=>`"${String(v).replace(/"/g,'""')}"`;
+  const lines=[head.join(",")].concat(rows.map(d=> cols.map(c=>{
+    let v=d[c]; if(Array.isArray(v)) v=v.join("; "); return esc(v??"");
+  }).join(",")));
+  const blob=new Blob([lines.join("\n")],{type:"text/csv"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download=`rf_coverage_${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ---- access gate (obfuscation only; see README) ---- */
+const PW_HASH = "ab0c6d1624ac3655f8e9d39a44d4403bfad58351eb315f1b43fa11006511ea79"; // sha256 of the password
+async function _sha256(s){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));
+  return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");}
+function _openApp(){const g=document.getElementById("gate"); if(g) g.remove(); load();}
+async function _tryUnlock(){
+  const i=document.getElementById("gate-pw"), e=document.getElementById("gate-err");
+  if(await _sha256(i.value)===PW_HASH){ sessionStorage.setItem("rfmap_ok","1"); _openApp(); }
+  else { e.style.display="block"; i.select(); }
+}
+(function _boot(){
+  // crypto.subtle requires a secure context (https) — GitHub Pages provides it.
+  // On a local file:// preview there's no secure context, so just open straight to
+  // the app (only the bundled sample is present locally, so nothing extra is exposed).
+  if(!(window.crypto && crypto.subtle)){ _openApp(); return; }
+  if(sessionStorage.getItem("rfmap_ok")==="1"){ _openApp(); return; }
+  document.getElementById("gate").style.display="flex";
+  document.getElementById("gate-go").addEventListener("click", _tryUnlock);
+  document.getElementById("gate-pw").addEventListener("keydown", ev=>{ if(ev.key==="Enter") _tryUnlock(); });
+  document.getElementById("gate-pw").focus();
+})();
+
+</script>
+</body>
+</html>
