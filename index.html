@@ -148,6 +148,31 @@
     overflow:hidden;margin-right:8px}
   .pbar i{display:block;height:100%;background:var(--b3)}
 
+  /* grouped filter trees (product area, region) */
+  .tree details{margin:1px 0}
+  .tree summary{display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;padding:3px 0;list-style:none}
+  .tree summary::-webkit-details-marker{display:none}
+  .tree summary::before{content:"\25B8";font-size:10px;color:var(--muted);width:10px;flex:none;transition:transform .12s}
+  .tree details[open]>summary::before{transform:rotate(90deg)}
+  .tree summary input{accent-color:var(--ink);width:15px;height:15px;flex:none;margin:0}
+  .tree .tlabel{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tree summary .n{margin-left:auto;color:var(--muted);font-size:12px}
+  .tkids{padding:1px 0 5px 16px;margin-left:4px;border-left:1px dotted var(--line)}
+  .tkids .check span:first-of-type{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* breadth-band tooltip: a single fixed-position element so it never clips
+     inside scroll containers; shows on hover and on focus (tap on touch). */
+  #tip{display:none;position:fixed;z-index:2000;background:var(--ink);color:#fff;padding:8px 11px;border-radius:7px;
+    font-size:11.5px;line-height:1.45;max-width:260px;box-shadow:0 6px 24px rgba(0,0,0,.25);pointer-events:none}
+  [data-tip]{cursor:help}
+  [data-tip]:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+
+  /* fragmentation group headers */
+  tr.ghead td{background:#EEF1F5;cursor:pointer;font-size:13px;padding:8px 12px}
+  tr.ghead .caret{display:inline-block;width:14px;color:var(--muted);font-size:11px}
+  tr.ghead .gmeta{color:var(--muted);font-weight:400;margin-left:10px;font-size:12px}
+  td.subcat{padding-left:34px}
+
   footer{padding:16px 20px 28px;color:var(--muted);font-size:12px;max-width:860px;line-height:1.5}
 
   .empty{padding:40px;text-align:center;color:var(--muted)}
@@ -206,10 +231,10 @@
       <div class="top"><b>Specialist → Platform</b><span id="spec-sub">breadth of product coverage · click a band to filter</span></div>
       <div class="bar" id="specbar"></div>
       <div class="legend">
-        <span><i style="background:var(--b1)"></i>Specialist · 1–2 categories</span>
-        <span><i style="background:var(--b2)"></i>Focused · 3–6</span>
-        <span><i style="background:var(--b3)"></i>Broadline · 7–14</span>
-        <span><i style="background:var(--b4)"></i>Platform · 15+</span>
+        <span data-tip="" data-band="Specialist" tabindex="0"><i style="background:var(--b1)"></i>Specialist · 1–2 categories</span>
+        <span data-tip="" data-band="Focused" tabindex="0"><i style="background:var(--b2)"></i>Focused · 3–6</span>
+        <span data-tip="" data-band="Broadline" tabindex="0"><i style="background:var(--b3)"></i>Broadline · 7–14</span>
+        <span data-tip="" data-band="Platform" tabindex="0"><i style="background:var(--b4)"></i>Platform · 15+</span>
       </div>
     </div>
     <div class="explore">
@@ -220,10 +245,8 @@
         <div class="fgroup"><label class="cap">Search name</label>
           <input type="search" id="q" placeholder="e.g. waveguide, antenna…" autocomplete="off"></div>
         <div class="fgroup"><label class="cap">Breadth band</label><div id="f-band"></div></div>
-        <div class="fgroup"><label class="cap">Category contains</label>
-          <select id="f-cat"><option value="">Any category</option></select></div>
-        <div class="fgroup"><label class="cap">Country</label><div id="f-country"></div></div>
-        <div class="fgroup"><label class="cap">Certification</label><div id="f-cert"></div></div>
+        <div class="fgroup"><label class="cap">Product area</label><div id="f-cat" class="tree"></div></div>
+        <div class="fgroup"><label class="cap">Region</label><div id="f-region" class="tree"></div></div>
         <div class="fgroup"><label class="cap">End market</label><div id="f-market"></div></div>
       </aside>
       <div>
@@ -257,7 +280,9 @@
   <!-- FRAGMENTATION -->
   <section class="view" id="view-frag">
     <div class="fragwrap">
-      <p class="note">Each product category, by how many players compete in it and how the depth is distributed.
+      <p class="note">Specific product categories, organized under broad product areas — expand a group to see them.
+        Players, specialist share and the roll-up read are computed per <i>specific</i> category, where the signal is
+        real; the group line only rolls up simple counts (how many categories, how many distinct companies).
         Many players, a high share of single-line specialists, and no broad platform incumbent = a fragmented category
         and a candidate roll-up thesis. Click a category to see its players in Explore.</p>
       <div class="tablewrap"><div style="overflow-x:auto"><table id="fragtbl">
@@ -1629,13 +1654,514 @@ const EMBEDDED_SAMPLE = /*__DATA__*/[
  }
 ];
 
+/* ---------------- category taxonomy (specific category -> broad group) ----------------
+   The broad group labels are the ONLY invented names on this page; every specific
+   category key below appears verbatim in companies.json (live pull and/or bundled
+   sample). Edit this one table to re-shelve a category. Any category in the data
+   that is missing here falls into "Other" automatically — never dropped, never
+   guessed into a group.
+   Conventions used: grouping is by function over form factor — active parts in
+   waveguide packages (Waveguide Amplifiers/Mixers/Detectors) sit under Active &
+   Semiconductor while passive waveguide hardware stays under Waveguide; "Space
+   Qualified X" and "Cryogenic X" follow X; testing *services* sit under Services &
+   Software, test *equipment* under Test & Measurement; antennas of every kind sit
+   under Antennas except SATCOM Antennas, which stay with the SATCOM story. */
+const GROUP_ORDER = [
+  "Antennas", "Passive Components", "Active & Semiconductor", "Filters & Multiplexers", "Timing & Frequency Control", "Waveguide", "Test & Measurement", "SATCOM & Radio Systems", "Wireless, GNSS & RFID", "Materials, Shielding & Fabrication", "Services & Software", "Other"];
+const CATEGORY_GROUPS = {
+  /* ---- Antennas (30) ---- */
+  "All Antennas": "Antennas",
+  "Antenna Radomes": "Antennas",
+  "Antennas": "Antennas",
+  "Base Station Antennas": "Antennas",
+  "Ceramic Antennas": "Antennas",
+  "Chip Antennas": "Antennas",
+  "DAS Antennas": "Antennas",
+  "Dipole Antennas": "Antennas",
+  "Direction Finding Antennas": "Antennas",
+  "Directional Antennas": "Antennas",
+  "Electronically Steerable Antennas": "Antennas",
+  "Feed Horns": "Antennas",
+  "Flexible Antennas": "Antennas",
+  "GPS/GNSS Antennas": "Antennas",
+  "Helical Antennas": "Antennas",
+  "Horn Antennas": "Antennas",
+  "IOT Antennas": "Antennas",
+  "Loop Antennas": "Antennas",
+  "Monopole Antennas": "Antennas",
+  "NFC Antennas": "Antennas",
+  "Omni-Directional Antennas": "Antennas",
+  "PCB Antennas": "Antennas",
+  "Panel Antennas": "Antennas",
+  "Parabolic Antennas": "Antennas",
+  "Patch Antennas": "Antennas",
+  "RFID Antennas": "Antennas",
+  "Rubber Duck Antennas": "Antennas",
+  "Sector Antennas": "Antennas",
+  "Stadium Antennas": "Antennas",
+  "Tracking Antennas": "Antennas",
+  /* ---- Passive Components (82) ---- */
+  "180 Degree Hybrid Couplers": "Passive Components",
+  "90 Degree Hybrid Couplers": "Passive Components",
+  "Adapters": "Passive Components",
+  "Adapters - Between Series": "Passive Components",
+  "Adapters - In Series": "Passive Components",
+  "All Circulators": "Passive Components",
+  "All Isolators": "Passive Components",
+  "Analog Phase Shifters": "Passive Components",
+  "Attenuator Matrices": "Passive Components",
+  "Baluns": "Passive Components",
+  "Between Series RF Adapters": "Passive Components",
+  "Bi-Directional Couplers": "Passive Components",
+  "Bias Tees": "Passive Components",
+  "Butler Matrices": "Passive Components",
+  "Cable Assemblies": "Passive Components",
+  "Cables": "Passive Components",
+  "Capacitors": "Passive Components",
+  "Circulators": "Passive Components",
+  "Coaxial Circulators": "Passive Components",
+  "Coaxial Isolators": "Passive Components",
+  "Coaxial Rotary Joints": "Passive Components",
+  "Coaxial Short Circuit Stub": "Passive Components",
+  "Connectors": "Passive Components",
+  "Cross Band Couplers": "Passive Components",
+  "Cryogenic Fixed Attenuators": "Passive Components",
+  "Cryogenic Terminations": "Passive Components",
+  "DC Blocks": "Passive Components",
+  "Delay Lines": "Passive Components",
+  "Digital Attenuators": "Passive Components",
+  "Digital Phase Shifters": "Passive Components",
+  "Directional Couplers": "Passive Components",
+  "Drop-In Circulators": "Passive Components",
+  "Drop-In Isolators": "Passive Components",
+  "Dual Directional Couplers": "Passive Components",
+  "Dust Caps": "Passive Components",
+  "Fixed Attenuators": "Passive Components",
+  "GNSS Splitters": "Passive Components",
+  "Gain Equalizers": "Passive Components",
+  "Impedance Matching Pads": "Passive Components",
+  "Inductors": "Passive Components",
+  "Intermod Suppression Panels": "Passive Components",
+  "Iso-Adapters": "Passive Components",
+  "Isolators": "Passive Components",
+  "Lange Couplers": "Passive Components",
+  "Limiters": "Passive Components",
+  "Line Stretchers": "Passive Components",
+  "Matching Networks": "Passive Components",
+  "Mechanical Phase Shifters": "Passive Components",
+  "Microstrip Circulators": "Passive Components",
+  "Microstrip Isolators": "Passive Components",
+  "Monopulse Comparators": "Passive Components",
+  "Multicouplers": "Passive Components",
+  "Phase Shifters": "Passive Components",
+  "Phase Trimmers": "Passive Components",
+  "Pick off Tees": "Passive Components",
+  "Power Dividers / Combiners": "Passive Components",
+  "Programmable Phase Shifters": "Passive Components",
+  "Proximity Couplers": "Passive Components",
+  "RF Chokes": "Passive Components",
+  "RF Crossovers": "Passive Components",
+  "RF Mems": "Passive Components",
+  "RF Surge Protectors": "Passive Components",
+  "RF Tappers": "Passive Components",
+  "Redundancy Switches": "Passive Components",
+  "Relays": "Passive Components",
+  "Resistors": "Passive Components",
+  "Space Qualified Baluns": "Passive Components",
+  "Space Qualified Cables": "Passive Components",
+  "Space Qualified Circulators": "Passive Components",
+  "Space Qualified Fixed Attenuators": "Passive Components",
+  "Space Qualified Isolators": "Passive Components",
+  "Space Qualified Power Dividers": "Passive Components",
+  "Space Qualified Switches": "Passive Components",
+  "Space Qualified Terminations": "Passive Components",
+  "Surface Mount Circulators": "Passive Components",
+  "Surface Mount Isolators": "Passive Components",
+  "Switch Matrix": "Passive Components",
+  "Switches": "Passive Components",
+  "Terminations": "Passive Components",
+  "Transformers": "Passive Components",
+  "USB Controlled Attenuators": "Passive Components",
+  "Variable Attenuators": "Passive Components",
+  /* ---- Active & Semiconductor (44) ---- */
+  "Amplifiers": "Active & Semiconductor",
+  "Analog to Digital Converters": "Active & Semiconductor",
+  "Antenna Tuning Switches": "Active & Semiconductor",
+  "Automotive Radar Chipsets": "Active & Semiconductor",
+  "Beamforming ICs": "Active & Semiconductor",
+  "Cryogenic Amplifiers": "Active & Semiconductor",
+  "DLVAs": "Active & Semiconductor",
+  "Detectors": "Active & Semiconductor",
+  "Digital to Analog Converters": "Active & Semiconductor",
+  "Down Converters": "Active & Semiconductor",
+  "Frequency Doublers": "Active & Semiconductor",
+  "Front End Modules": "Active & Semiconductor",
+  "GPS/GNSS Amplifiers": "Active & Semiconductor",
+  "Integrated Microwave Assemblies": "Active & Semiconductor",
+  "Klystron Tubes": "Active & Semiconductor",
+  "Limiter Diodes": "Active & Semiconductor",
+  "Low Noise Amplifiers": "Active & Semiconductor",
+  "Magnetrons": "Active & Semiconductor",
+  "Mixers": "Active & Semiconductor",
+  "Modulators": "Active & Semiconductor",
+  "Multipliers": "Active & Semiconductor",
+  "Noise Diodes": "Active & Semiconductor",
+  "PIN Diodes": "Active & Semiconductor",
+  "Power Amplifiers": "Active & Semiconductor",
+  "RF Modules": "Active & Semiconductor",
+  "RF Transmitters": "Active & Semiconductor",
+  "RF Up-down Converters": "Active & Semiconductor",
+  "RFSoC Boards & Systems": "Active & Semiconductor",
+  "Receivers": "Active & Semiconductor",
+  "Schottky Diodes": "Active & Semiconductor",
+  "Space Qualified Amplifiers": "Active & Semiconductor",
+  "Space Qualified Detectors": "Active & Semiconductor",
+  "Space Qualified Mixers": "Active & Semiconductor",
+  "Space Qualified Multipliers": "Active & Semiconductor",
+  "Tower Mount Amplifiers": "Active & Semiconductor",
+  "Transceivers": "Active & Semiconductor",
+  "Transistors": "Active & Semiconductor",
+  "Traveling Wave Tubes": "Active & Semiconductor",
+  "Upconverters": "Active & Semiconductor",
+  "Varactor Diodes": "Active & Semiconductor",
+  "Waveguide Amplifiers": "Active & Semiconductor",
+  "Waveguide Detectors": "Active & Semiconductor",
+  "Waveguide Mixers": "Active & Semiconductor",
+  "Zener Diodes": "Active & Semiconductor",
+  /* ---- Filters & Multiplexers (15) ---- */
+  "Band Pass Filters": "Filters & Multiplexers",
+  "Band Stop Filters": "Filters & Multiplexers",
+  "Cryogenic High Pass Filters": "Filters & Multiplexers",
+  "Diplexers": "Filters & Multiplexers",
+  "Duplexers": "Filters & Multiplexers",
+  "GPS/GNSS Filter Amplifiers": "Filters & Multiplexers",
+  "High Pass Filters": "Filters & Multiplexers",
+  "Low Pass Filters": "Filters & Multiplexers",
+  "Preselectors": "Filters & Multiplexers",
+  "Quadplexers": "Filters & Multiplexers",
+  "RF Multiplexers": "Filters & Multiplexers",
+  "Space Qualified Band Pass Filters": "Filters & Multiplexers",
+  "Switched Filter Banks": "Filters & Multiplexers",
+  "Triplexers": "Filters & Multiplexers",
+  "Tunable Filters": "Filters & Multiplexers",
+  /* ---- Timing & Frequency Control (35) ---- */
+  "Clock Oscillator": "Timing & Frequency Control",
+  "Crystal Oscillators": "Timing & Frequency Control",
+  "DCXO": "Timing & Frequency Control",
+  "DROs": "Timing & Frequency Control",
+  "Frequency Synthesizers": "Timing & Frequency Control",
+  "GPS Disciplined Oscillators": "Timing & Frequency Control",
+  "General Crystal Oscillators": "Timing & Frequency Control",
+  "Gunn Diode Oscillators": "Timing & Frequency Control",
+  "Jitter Attenuators": "Timing & Frequency Control",
+  "MCXO": "Timing & Frequency Control",
+  "MEMS Oscillators": "Timing & Frequency Control",
+  "OCXO": "Timing & Frequency Control",
+  "Opto-Electronic Oscillators": "Timing & Frequency Control",
+  "Oscillator": "Timing & Frequency Control",
+  "Phase Detectors": "Timing & Frequency Control",
+  "Phase Locked Dielectric Resonator Oscillators (PLDRO)": "Timing & Frequency Control",
+  "Phase Locked Loops": "Timing & Frequency Control",
+  "Phase Locked Oscillators": "Timing & Frequency Control",
+  "Prescalers": "Timing & Frequency Control",
+  "Quartz Crystals": "Timing & Frequency Control",
+  "Resonators": "Timing & Frequency Control",
+  "Rubidium Oscillators": "Timing & Frequency Control",
+  "Space Qualified DROs": "Timing & Frequency Control",
+  "Space Qualified Frequency Synthesizers": "Timing & Frequency Control",
+  "Space Qualified PLDROs": "Timing & Frequency Control",
+  "Space Qualified Voltage Controlled Oscillators": "Timing & Frequency Control",
+  "TCVCXO": "Timing & Frequency Control",
+  "TCXO": "Timing & Frequency Control",
+  "Time and Frequency Standards": "Timing & Frequency Control",
+  "VCSO": "Timing & Frequency Control",
+  "VCTCXO": "Timing & Frequency Control",
+  "VCXO": "Timing & Frequency Control",
+  "Voltage Controlled Oscillators": "Timing & Frequency Control",
+  "XO": "Timing & Frequency Control",
+  "YIG Oscillators": "Timing & Frequency Control",
+  /* ---- Waveguide (31) ---- */
+  "Adapters - Coax to Waveguide": "Waveguide",
+  "Coaxial to Waveguide Adapters": "Waveguide",
+  "Flexible Waveguides": "Waveguide",
+  "Orthomode Transducers": "Waveguide",
+  "Waveguide Attenuators": "Waveguide",
+  "Waveguide Bends": "Waveguide",
+  "Waveguide Circulators": "Waveguide",
+  "Waveguide Components": "Waveguide",
+  "Waveguide Couplers": "Waveguide",
+  "Waveguide Diplexers": "Waveguide",
+  "Waveguide EH Tuners": "Waveguide",
+  "Waveguide Filters": "Waveguide",
+  "Waveguide Flanges": "Waveguide",
+  "Waveguide Isolators": "Waveguide",
+  "Waveguide Phase Shifters": "Waveguide",
+  "Waveguide Polarizers": "Waveguide",
+  "Waveguide Power Combiners & Dividers": "Waveguide",
+  "Waveguide Pressure Windows": "Waveguide",
+  "Waveguide Quick Connects": "Waveguide",
+  "Waveguide Rotary Joints": "Waveguide",
+  "Waveguide Screws": "Waveguide",
+  "Waveguide Shims & Spacers": "Waveguide",
+  "Waveguide Shorts": "Waveguide",
+  "Waveguide Straights": "Waveguide",
+  "Waveguide Switches": "Waveguide",
+  "Waveguide Tees": "Waveguide",
+  "Waveguide Terminations": "Waveguide",
+  "Waveguide Transitions": "Waveguide",
+  "Waveguide Tubing": "Waveguide",
+  "Waveguide Twists": "Waveguide",
+  "Waveguide to Coax Adapters": "Waveguide",
+  /* ---- Test & Measurement (95) ---- */
+  "Anechoic Chambers": "Test & Measurement",
+  "Antenna & Cable Analyzers": "Test & Measurement",
+  "Antenna Alignment Tools": "Test & Measurement",
+  "Antenna Measurement Systems": "Test & Measurement",
+  "Antenna Positioners": "Test & Measurement",
+  "Antenna Test & Measurement Frequency Extension Systems": "Test & Measurement",
+  "Arbitrary Waveform Generators": "Test & Measurement",
+  "Automated Impedance Tuners": "Test & Measurement",
+  "Automotive Radar OTA Test Solutions": "Test & Measurement",
+  "Base Station Simulators": "Test & Measurement",
+  "Cable Analyzers": "Test & Measurement",
+  "Channel Emulators": "Test & Measurement",
+  "Comb Generators": "Test & Measurement",
+  "Compact Range Systems": "Test & Measurement",
+  "Conformance Test Systems": "Test & Measurement",
+  "Connector Gauge Kits": "Test & Measurement",
+  "Current Probes": "Test & Measurement",
+  "Digitizers": "Test & Measurement",
+  "E-Field Generators": "Test & Measurement",
+  "EMC Antenna Kits": "Test & Measurement",
+  "EMC Antennas": "Test & Measurement",
+  "EMC Horn Antennas": "Test & Measurement",
+  "EMC Immunity Test Systems": "Test & Measurement",
+  "EMC Power Amplifiers": "Test & Measurement",
+  "EMC Power Meters": "Test & Measurement",
+  "EMC Preamplifiers": "Test & Measurement",
+  "EMF Meters & Antennas": "Test & Measurement",
+  "EMI Receivers": "Test & Measurement",
+  "Fading Simulators": "Test & Measurement",
+  "Field Sensors": "Test & Measurement",
+  "Frequency Counters": "Test & Measurement",
+  "GNSS Simulators": "Test & Measurement",
+  "HTOL Test Systems": "Test & Measurement",
+  "Handover Test Systems": "Test & Measurement",
+  "Microwave Generators": "Test & Measurement",
+  "Near Field Probes": "Test & Measurement",
+  "Noise Figure Analyzer Frequency Extenders": "Test & Measurement",
+  "Noise Figure Analyzers": "Test & Measurement",
+  "Noise Generators": "Test & Measurement",
+  "Noise Meters": "Test & Measurement",
+  "Noise Sources": "Test & Measurement",
+  "Oscilloscopes": "Test & Measurement",
+  "PIM Analyzers": "Test & Measurement",
+  "PXI Attenuators": "Test & Measurement",
+  "PXI Co-processors": "Test & Measurement",
+  "PXI Combiners": "Test & Measurement",
+  "PXI Data Storage Modules": "Test & Measurement",
+  "PXI Multiplexers": "Test & Measurement",
+  "PXI Signal Analyzers": "Test & Measurement",
+  "PXI Signal Conditioning": "Test & Measurement",
+  "PXI Signal Generators": "Test & Measurement",
+  "PXI Signal Transceivers": "Test & Measurement",
+  "PXI Switch Matrix": "Test & Measurement",
+  "PXI Switches": "Test & Measurement",
+  "PXI Synthesizer": "Test & Measurement",
+  "PXI Vector Network Analyzers": "Test & Measurement",
+  "Phantoms": "Test & Measurement",
+  "Phase Noise Analyzers": "Test & Measurement",
+  "Power Meters": "Test & Measurement",
+  "Power Meters & Sensors": "Test & Measurement",
+  "Probe Cards": "Test & Measurement",
+  "Probe Positioners & Manipulators": "Test & Measurement",
+  "Probe Stations & Systems": "Test & Measurement",
+  "Pulsed IV Systems": "Test & Measurement",
+  "RF Probes": "Test & Measurement",
+  "RF Spectrum Recording Systems": "Test & Measurement",
+  "RF Test Sets": "Test & Measurement",
+  "Radio Altimeter Test Sets": "Test & Measurement",
+  "Radio Frequency Special Check-Out Equipment (RF SCOE)": "Test & Measurement",
+  "SAR Measurement Systems": "Test & Measurement",
+  "SAR Probes": "Test & Measurement",
+  "Satellite Link Emulators": "Test & Measurement",
+  "Scalar Network Analyzers": "Test & Measurement",
+  "Shielded Test Enclosures": "Test & Measurement",
+  "Signal Generator Extenders": "Test & Measurement",
+  "Signal Generators": "Test & Measurement",
+  "Slide Screw Tuners": "Test & Measurement",
+  "Spectrum Analyzer Extenders": "Test & Measurement",
+  "Spectrum Analyzers": "Test & Measurement",
+  "Spectrum Monitoring Receivers": "Test & Measurement",
+  "Stub Tuners": "Test & Measurement",
+  "TEM / GTEM Cells": "Test & Measurement",
+  "Temperature Chambers": "Test & Measurement",
+  "Test Fixtures": "Test & Measurement",
+  "Test Loop Translators": "Test & Measurement",
+  "Test Sockets": "Test & Measurement",
+  "Thermal Platforms": "Test & Measurement",
+  "Torque Wrenches": "Test & Measurement",
+  "Trihedral Corner Reflectors": "Test & Measurement",
+  "USB Power Sensors": "Test & Measurement",
+  "VNA Calibration Kits": "Test & Measurement",
+  "Vector Network Analyzer (VNA) Frequency Extenders": "Test & Measurement",
+  "Vector Network Analyzers": "Test & Measurement",
+  "Wattmeters": "Test & Measurement",
+  "eCall Test Systems": "Test & Measurement",
+  /* ---- SATCOM & Radio Systems (30) ---- */
+  "Antenna Control Systems": "SATCOM & Radio Systems",
+  "Block Up Converters": "SATCOM & Radio Systems",
+  "Block Upconverters": "SATCOM & Radio Systems",
+  "Counter-Unmanned Aerial Systems (CUAS)": "SATCOM & Radio Systems",
+  "Data Links": "SATCOM & Radio Systems",
+  "Direction Finding Systems": "SATCOM & Radio Systems",
+  "GNSS Anti-Jamming Solutions": "SATCOM & Radio Systems",
+  "Identification Friend or Foe (IFF) Systems": "SATCOM & Radio Systems",
+  "Low Noise Blocks": "SATCOM & Radio Systems",
+  "Microwave Backhaul Links": "SATCOM & Radio Systems",
+  "Millimeter Wave Security Scanners": "SATCOM & Radio Systems",
+  "RADAR Systems": "SATCOM & Radio Systems",
+  "RAN Radio Units": "SATCOM & Radio Systems",
+  "RF Ablation Systems": "SATCOM & Radio Systems",
+  "RF Decoys": "SATCOM & Radio Systems",
+  "RF Distribution Systems": "SATCOM & Radio Systems",
+  "RF Over Fiber Modules": "SATCOM & Radio Systems",
+  "RF Plasma Sources": "SATCOM & Radio Systems",
+  "RF Repeaters": "SATCOM & Radio Systems",
+  "Radar Sensors": "SATCOM & Radio Systems",
+  "Radar Target Simulators": "SATCOM & Radio Systems",
+  "Radar Transponders": "SATCOM & Radio Systems",
+  "SATCOM Amplifier Systems": "SATCOM & Radio Systems",
+  "SATCOM Antennas": "SATCOM & Radio Systems",
+  "SATCOM Terminals": "SATCOM & Radio Systems",
+  "SATCOM Transceivers": "SATCOM & Radio Systems",
+  "Software Defined Radios": "SATCOM & Radio Systems",
+  "Tactical Data Links": "SATCOM & Radio Systems",
+  "Tactical SDRs": "SATCOM & Radio Systems",
+  "VSAT Terminals": "SATCOM & Radio Systems",
+  /* ---- Wireless, GNSS & RFID (21) ---- */
+  "Cellular Modules": "Wireless, GNSS & RFID",
+  "GNSS Chipsets": "Wireless, GNSS & RFID",
+  "GNSS Modules": "Wireless, GNSS & RFID",
+  "GNSS Modules / Receivers": "Wireless, GNSS & RFID",
+  "GNSS OEM Boards": "Wireless, GNSS & RFID",
+  "Inertial Navigation Systems": "Wireless, GNSS & RFID",
+  "NFC Readers": "Wireless, GNSS & RFID",
+  "RFID / NFC Transponder Coils": "Wireless, GNSS & RFID",
+  "RFID Portals": "Wireless, GNSS & RFID",
+  "RFID Printers": "Wireless, GNSS & RFID",
+  "RFID Reader ICs": "Wireless, GNSS & RFID",
+  "RFID Reader Modules": "Wireless, GNSS & RFID",
+  "RFID Readers": "Wireless, GNSS & RFID",
+  "RFID Tag ICs": "Wireless, GNSS & RFID",
+  "RFID Tags": "Wireless, GNSS & RFID",
+  "Sub-GHz Modules": "Wireless, GNSS & RFID",
+  "V2X Modules": "Wireless, GNSS & RFID",
+  "Wireless Charging Coils": "Wireless, GNSS & RFID",
+  "Wireless Charging Receivers": "Wireless, GNSS & RFID",
+  "Wireless Charging Transmitters": "Wireless, GNSS & RFID",
+  "Wireless Chipsets": "Wireless, GNSS & RFID",
+  /* ---- Materials, Shielding & Fabrication (30) ---- */
+  "Absorbers": "Materials, Shielding & Fabrication",
+  "Board Level EMI/RFI Shielding": "Materials, Shielding & Fabrication",
+  "Ceramics": "Materials, Shielding & Fabrication",
+  "Contract Manufacturing": "Materials, Shielding & Fabrication",
+  "EMC Absorbers": "Materials, Shielding & Fabrication",
+  "EMI / RFI Shielding": "Materials, Shielding & Fabrication",
+  "Etching": "Materials, Shielding & Fabrication",
+  "Fingerstock": "Materials, Shielding & Fabrication",
+  "Foundry Services": "Materials, Shielding & Fabrication",
+  "Gaskets": "Materials, Shielding & Fabrication",
+  "Laminates": "Materials, Shielding & Fabrication",
+  "Lapping Services": "Materials, Shielding & Fabrication",
+  "Laser Cutting": "Materials, Shielding & Fabrication",
+  "MRI Shielding Equipment": "Materials, Shielding & Fabrication",
+  "Marking": "Materials, Shielding & Fabrication",
+  "Polishing Services": "Materials, Shielding & Fabrication",
+  "RF PCB Fabrication": "Materials, Shielding & Fabrication",
+  "RF Packages": "Materials, Shielding & Fabrication",
+  "RF Shielded Doors": "Materials, Shielding & Fabrication",
+  "RF Shielded Windows": "Materials, Shielding & Fabrication",
+  "RF Shielding Fabrics": "Materials, Shielding & Fabrication",
+  "RF Shielding Foil": "Materials, Shielding & Fabrication",
+  "RF Shielding Mesh": "Materials, Shielding & Fabrication",
+  "RF Shielding Paint": "Materials, Shielding & Fabrication",
+  "RF Shielding Window Film": "Materials, Shielding & Fabrication",
+  "RF/EMI Shielded Tents": "Materials, Shielding & Fabrication",
+  "Shielded Air Filters": "Materials, Shielding & Fabrication",
+  "Substrates": "Materials, Shielding & Fabrication",
+  "Transparent Conductive Films": "Materials, Shielding & Fabrication",
+  "Welding": "Materials, Shielding & Fabrication",
+  /* ---- Services & Software (13) ---- */
+  "Antenna Design Services": "Services & Software",
+  "Compliance Testing": "Services & Software",
+  "GPS / GNSS Correction Services": "Services & Software",
+  "Legal & Compliance": "Services & Software",
+  "MMIC Design Services": "Services & Software",
+  "RF & Microwave Testing": "Services & Software",
+  "RF Courses & Training": "Services & Software",
+  "RF Design Services": "Services & Software",
+  "RF Software": "Services & Software",
+  "RF Testing Services": "Services & Software",
+  "Test Equipment Rentals": "Services & Software",
+  "Test Equipment Repair Services": "Services & Software",
+  "Wireless IP Cores": "Services & Software",
+};
+const groupOf = c => CATEGORY_GROUPS[c] || "Other";
+
+/* ---------------- country -> region (UN geoscheme) ----------------
+   United States is kept as its own top-level region per the analysis brief.
+   Assignments follow the UN geoscheme (Russia -> Europe, Israel and Turkey ->
+   Western Asia, shown here as Middle East). "England" appears in the data as its
+   own value and is mapped with the United Kingdom. Anything not listed here —
+   including a blank country — falls into Rest of World automatically rather than
+   being guessed. */
+const REGION_ORDER = ["United States","North America (ex-US)","Europe","Asia-Pacific",
+                      "Middle East","Rest of World"];
+const REGIONS = {
+  "United States":"United States",
+  /* North America (ex-US) */
+  "Canada":"North America (ex-US)", "Mexico":"North America (ex-US)", "Bermuda":"North America (ex-US)",
+  /* Europe */
+  "United Kingdom":"Europe", "England":"Europe", "Germany":"Europe", "France":"Europe",
+  "Italy":"Europe", "Sweden":"Europe", "Netherlands":"Europe", "Spain":"Europe",
+  "Finland":"Europe", "Switzerland":"Europe", "Denmark":"Europe", "Belgium":"Europe",
+  "Ireland":"Europe", "Russia":"Europe", "Poland":"Europe", "Norway":"Europe",
+  "Czech Republic":"Europe", "Greece":"Europe", "Slovakia":"Europe", "Serbia":"Europe",
+  "Hungary":"Europe", "Lithuania":"Europe", "Austria":"Europe", "Estonia":"Europe",
+  "Ukraine":"Europe", "Latvia":"Europe", "Luxembourg":"Europe", "Romania":"Europe",
+  "Andorra":"Europe",
+  /* Asia-Pacific */
+  "China":"Asia-Pacific", "Taiwan":"Asia-Pacific", "India":"Asia-Pacific",
+  "South Korea":"Asia-Pacific", "Japan":"Asia-Pacific", "Singapore":"Asia-Pacific",
+  "Australia":"Asia-Pacific", "Hong Kong":"Asia-Pacific", "Malaysia":"Asia-Pacific",
+  "Thailand":"Asia-Pacific", "New Zealand":"Asia-Pacific", "Viet Nam":"Asia-Pacific",
+  "Vietnam":"Asia-Pacific",
+  /* Middle East */
+  "Israel":"Middle East", "Turkey":"Middle East",
+  /* Rest of World (explicit) */
+  "South Africa":"Rest of World", "Brazil":"Rest of World",
+};
+const regionOf = c => REGIONS[c] || "Rest of World";
+
 let DATA = [];
 const bandName = n => n<=2 ? "Specialist" : n<=6 ? "Focused" : n<=14 ? "Broadline" : "Platform";
 const bandColor = {Specialist:"var(--b1)", Focused:"var(--b2)", Broadline:"var(--b3)", Platform:"var(--b4)"};
 const BANDS = ["Specialist","Focused","Broadline","Platform"];
 
-const state = {q:"", bands:new Set(), countries:new Set(), certs:new Set(), markets:new Set(),
-               cat:"", sortK:"num_categories", sortDir:-1, showAll:false};
+const state = {q:"", bands:new Set(), markets:new Set(),
+               catGroups:new Set(), cats:new Set(),      // product area: broad groups + specific categories
+               regions:new Set(), countries:new Set(),   // geography: regions + individual countries
+               sortK:"num_categories", sortDir:-1, showAll:false};
+
+// Breadth = how many DISTINCT product categories a company spans — not how many
+// products it sells, and not a statement about company size or revenue.
+const BAND_TIPS = {
+  Specialist:"Specialist — spans 1–2 distinct product categories: a focused pure-play in one product area. Breadth counts categories covered, not how many products are sold.",
+  Focused:"Focused — spans 3–6 distinct product categories: concentrated around a core line. Breadth counts categories covered, not how many products are sold.",
+  Broadline:"Broadline — spans 7–14 distinct product categories: a broad multi-line offering. Breadth counts categories covered, not how many products are sold.",
+  Platform:"Platform — spans 15+ distinct product categories: covers much of the landscape, typically an incumbent or consolidator. Breadth counts categories covered, not how many products are sold.",
+};
 const ROW_CAP = 250;      // rows rendered before "Show all" — keeps first paint snappy on the full pull
 let DATA_DATE = "";       // Last-Modified of companies.json (server metadata, not a guess)
 
@@ -1674,14 +2200,10 @@ function renderKPIs(){
   const countries=new Set(), cats=new Set(); let products=0;
   DATA.forEach(d=>{ if(d.country) countries.add(d.country); d.categories.forEach(c=>cats.add(c));
     products+=d.total_products||0; });
-  const breadths=DATA.map(d=>d.num_categories).sort((a,b)=>a-b);
-  const median=breadths.length? (breadths.length%2 ? breadths[(breadths.length-1)/2]
-    : (breadths[breadths.length/2-1]+breadths[breadths.length/2])/2) : 0;
   const kpi=(v,l)=>`<div class="kpi"><b>${v}</b><span>${l}</span></div>`;
   k.innerHTML = kpi(DATA.length.toLocaleString(),"companies")
     + kpi(countries.size,"countries")
     + kpi(cats.size,"product categories")
-    + kpi(median,"median breadth")
     + kpi(products.toLocaleString(),"products listed");
 }
 
@@ -1692,9 +2214,9 @@ function uniqCount(getter){
 }
 
 function checkList(elId, items, setRef){
-  // Long lists (50 countries, dozens of certs on the live pull) collapse to the top
-  // entries with a "show all" toggle so the rail stays scannable.
-  const VISIBLE = 8;
+  // Long lists collapse to the top entries with a "show all" toggle so the rail
+  // stays scannable; groups with no values in the data hide entirely.
+  const VISIBLE = 5;
   const el = document.getElementById(elId); el.innerHTML="";
   if(!items.length){ const g=el.closest(".fgroup"); if(g) g.style.display="none"; return; }
   items.forEach(([val,n],i)=>{
@@ -1718,6 +2240,80 @@ function checkList(elId, items, setRef){
   }
 }
 
+const escAttr = s => String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+
+/* Two-level checkbox tree used for Product area (broad group -> specific
+   categories) and Region (region -> countries). Checking a header selects the
+   whole group; children are independently selectable for drill-down. Children
+   beyond the first few sit behind a "Show all" toggle (task: no laundry lists). */
+function buildTree(elId, groups, selGroups, selKids){
+  const KID_VISIBLE = 5;
+  const el = document.getElementById(elId); el.innerHTML="";
+  groups.forEach(g=>{
+    const det=document.createElement("details"); det.className="tnode";
+    const kids=g.kids.map(([k,n],i)=>
+      `<label class="check"${i>=KID_VISIBLE?" hidden":""}><input type="checkbox" data-kid="${escAttr(k)}">`+
+      `<span>${k||"—"}</span><span class="n mono">${n}</span></label>`).join("");
+    const more=g.kids.length>KID_VISIBLE?`<button type="button" class="more">Show all ${g.kids.length}</button>`:"";
+    det.innerHTML=`<summary><input type="checkbox" data-group="${escAttr(g.label)}">`+
+      `<span class="tlabel">${g.label}</span><span class="n mono">${g.count}</span></summary>`+
+      `<div class="tkids">${kids}${more}</div>`;
+    const gcb=det.querySelector("summary input");
+    gcb.addEventListener("click", e=>e.stopPropagation());   // don't toggle open/closed
+    gcb.addEventListener("change", e=>{ e.target.checked?selGroups.add(g.label):selGroups.delete(g.label); render(); });
+    det.querySelectorAll(".tkids input").forEach(cb=>{
+      cb.addEventListener("change", e=>{ const v=cb.dataset.kid;
+        e.target.checked?selKids.add(v):selKids.delete(v);
+        gcb.indeterminate = !gcb.checked && [...det.querySelectorAll(".tkids input")].some(c=>c.checked);
+        render(); });
+    });
+    const mb=det.querySelector(".more");
+    if(mb){ let open=false;
+      mb.addEventListener("click", ()=>{ open=!open;
+        [...det.querySelectorAll(".tkids label.check")].forEach((r,i)=>{ if(i>=KID_VISIBLE) r.hidden=!open; });
+        mb.textContent = open?"Show fewer":`Show all ${g.kids.length}`; });
+    }
+    el.appendChild(det);
+  });
+}
+
+// Reflect programmatic state changes (e.g. Fragmentation click-through) in the trees.
+function syncTrees(){
+  [["f-cat",state.catGroups,state.cats],["f-region",state.regions,state.countries]].forEach(([id,gs,ks])=>{
+    document.querySelectorAll(`#${id} details`).forEach(det=>{
+      const gcb=det.querySelector("summary input");
+      gcb.checked = gs.has(gcb.dataset.group);
+      let any=false;
+      det.querySelectorAll(".tkids input").forEach(cb=>{
+        cb.checked = ks.has(cb.dataset.kid); if(cb.checked) any=true;
+        if(cb.checked) cb.closest("label").hidden=false;
+      });
+      gcb.indeterminate = !gcb.checked && any;
+      if(any) det.open = true;
+    });
+  });
+}
+
+/* Breadth-band tooltip: one fixed-position element, shown on hover and on
+   focus — elements carry tabindex so a tap focuses them on touch screens. */
+const tipEl=document.createElement("div"); tipEl.id="tip";
+function showTip(target){
+  const t=target.getAttribute("data-tip"); if(!t) return;
+  tipEl.textContent=t; tipEl.style.display="block";
+  const r=target.getBoundingClientRect(), tw=tipEl.offsetWidth, th=tipEl.offsetHeight;
+  let x=Math.min(Math.max(6, r.left+r.width/2-tw/2), innerWidth-tw-6);
+  let y=r.top-th-8; if(y<6) y=r.bottom+8;
+  tipEl.style.left=x+"px"; tipEl.style.top=y+"px";
+}
+function hideTip(){ tipEl.style.display="none"; }
+function initTips(){
+  document.body.appendChild(tipEl);
+  document.addEventListener("mouseover", e=>{ const el=e.target.closest("[data-tip]"); el?showTip(el):hideTip(); });
+  document.addEventListener("focusin",  e=>{ const el=e.target.closest("[data-tip]"); if(el) showTip(el); });
+  document.addEventListener("focusout", hideTip);
+  document.addEventListener("scroll", hideTip, true);
+}
+
 function init(){
   // Show the data file's own Last-Modified date when the server provides one;
   // anything else (like today's date) would imply a freshness the data may not have.
@@ -1728,12 +2324,29 @@ function init(){
   const bandCounts = {}; BANDS.forEach(b=>bandCounts[b]=0);
   DATA.forEach(d=>bandCounts[bandName(d.num_categories)]++);
   checkList("f-band", BANDS.map(b=>[b,bandCounts[b]]), state.bands);
-  checkList("f-country", uniqCount(d=>d.country), state.countries);
-  checkList("f-cert", uniqCount(d=>d.certifications), state.certs);
   checkList("f-market", uniqCount(d=>d.end_markets), state.markets);
-  const catSel = document.getElementById("f-cat");
-  uniqCount(d=>d.categories).forEach(([c,n])=> catSel.add(new Option(`${c} (${n})`, c)));
-  catSel.addEventListener("change", e=>{ state.cat=e.target.value; render(); });
+
+  // Product-area tree: group count = distinct companies with >=1 category in the
+  // group; category counts = companies listing that category. All from the data.
+  const catCounts=new Map(), groupCo=new Map();
+  DATA.forEach(d=>{ const gs=new Set();
+    d.categories.forEach(c=>{ catCounts.set(c,(catCounts.get(c)||0)+1); gs.add(groupOf(c)); });
+    gs.forEach(g=>groupCo.set(g,(groupCo.get(g)||0)+1)); });
+  buildTree("f-cat", GROUP_ORDER.filter(g=>groupCo.has(g)).map(g=>({label:g, count:groupCo.get(g),
+    kids:[...catCounts].filter(([c])=>groupOf(c)===g).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))})),
+    state.catGroups, state.cats);
+
+  // Region tree: regions first, countries nested for drill-down.
+  const ctyCounts=new Map(), regCo=new Map();
+  DATA.forEach(d=>{ const cty=d.country||""; ctyCounts.set(cty,(ctyCounts.get(cty)||0)+1);
+    const r=regionOf(cty); regCo.set(r,(regCo.get(r)||0)+1); });
+  buildTree("f-region", REGION_ORDER.filter(r=>regCo.has(r)).map(r=>({label:r, count:regCo.get(r),
+    kids:[...ctyCounts].filter(([c])=>regionOf(c)===r).sort((a,b)=>b[1]-a[1]||(a[0]||"—").localeCompare(b[0]||"—"))})),
+    state.regions, state.countries);
+
+  // breadth-band explainers on the static legend
+  document.querySelectorAll(".legend [data-band]").forEach(s=> s.setAttribute("data-tip", BAND_TIPS[s.dataset.band]));
+  initTips();
   document.getElementById("q").addEventListener("input", e=>{ state.q=e.target.value.toLowerCase(); render(); });
   document.getElementById("clearall").addEventListener("click", reset);
   document.querySelectorAll("#tbl th[data-k]").forEach(th=> th.addEventListener("click", ()=>{
@@ -1751,9 +2364,10 @@ function init(){
 }
 
 function reset(){
-  state.q=""; state.cat=""; state.bands.clear(); state.countries.clear(); state.certs.clear(); state.markets.clear();
-  document.getElementById("q").value=""; document.getElementById("f-cat").value="";
-  document.querySelectorAll(".rail input[type=checkbox]").forEach(c=>c.checked=false);
+  state.q=""; state.bands.clear(); state.markets.clear();
+  state.catGroups.clear(); state.cats.clear(); state.regions.clear(); state.countries.clear();
+  document.getElementById("q").value="";
+  document.querySelectorAll(".rail input[type=checkbox]").forEach(c=>{c.checked=false; c.indeterminate=false;});
   render();
 }
 
@@ -1761,9 +2375,14 @@ function filtered(){
   return DATA.filter(d=>{
     if(state.q && !d.name.toLowerCase().includes(state.q)) return false;
     if(state.bands.size && !state.bands.has(bandName(d.num_categories))) return false;
-    if(state.countries.size && !state.countries.has(d.country)) return false;
-    if(state.cat && !d.categories.includes(state.cat)) return false;
-    if(state.certs.size && !d.certifications.some(c=>state.certs.has(c))) return false;
+    // geography: a company matches if its region OR its specific country is selected
+    if(state.regions.size || state.countries.size){
+      if(!(state.countries.has(d.country||"") || state.regions.has(regionOf(d.country||"")))) return false;
+    }
+    // product area: matches if any of its categories is selected, or sits in a selected group
+    if(state.catGroups.size || state.cats.size){
+      if(!d.categories.some(c=> state.cats.has(c) || state.catGroups.has(groupOf(c)))) return false;
+    }
     if(state.markets.size && !d.end_markets.some(m=>state.markets.has(m))) return false;
     return true;
   });
@@ -1793,7 +2412,7 @@ function render(){
     const tr = document.createElement("tr");
     tr.innerHTML = `<td class="name"><a data-id="${d.id}">${d.name}</a></td>
       <td>${d.country||"—"}</td>
-      <td><span class="badge" style="background:${bandColor[bn]}">${bn}<span class="bn">${d.num_categories}</span></span></td>
+      <td><span class="badge" tabindex="0" data-tip="${escAttr(BAND_TIPS[bn])}" style="background:${bandColor[bn]}">${bn}<span class="bn">${d.num_categories}</span></span></td>
       <td class="cats">${cats||"—"}</td>
       <td class="cats">${d.certifications.join(", ")||"—"}</td>
       <td class="mono">${(d.total_products||0).toLocaleString()}</td>
@@ -1815,7 +2434,8 @@ function renderSpectrum(rows){
   BANDS.forEach(b=>{
     const pct=counts[b]/total*100;
     const seg=document.createElement("button"); seg.className="seg"+(state.bands.size&&!state.bands.has(b)?" off":"");
-    seg.style.background=bandColor[b]; seg.style.flexBasis=pct+"%"; seg.title=`${b}: ${counts[b]} (${pct.toFixed(0)}%)`;
+    seg.style.background=bandColor[b]; seg.style.flexBasis=pct+"%";
+    seg.setAttribute("data-tip", `${counts[b]} compan${counts[b]===1?"y":"ies"} (${pct.toFixed(0)}%) · ${BAND_TIPS[b]}`);
     seg.textContent = pct>9 ? counts[b] : "";
     seg.addEventListener("click", ()=>{ state.bands.has(b)?state.bands.delete(b):state.bands.add(b);
       const cb=document.getElementById("f-band-"+b.replace(/\W/g,"")); if(cb) cb.checked=state.bands.has(b); render(); });
@@ -1832,7 +2452,7 @@ function renderSim(id){
     + (anchor.website?` · <a href="${anchor.website}" target="_blank" rel="noopener">site ↗</a>`:"");
   document.getElementById("sim-anchor").innerHTML =
     `<div class="anchor"><h2>${anchor.name}</h2>
-       <div class="meta">${anchor.country||"—"} · <span class="badge" style="background:${bandColor[bn]}">${bn}</span>
+       <div class="meta">${anchor.country||"—"} · <span class="badge" tabindex="0" data-tip="${escAttr(BAND_TIPS[bn])}" style="background:${bandColor[bn]}">${bn}</span>
        · ${anchor.num_categories} categories · ${(anchor.total_products||0).toLocaleString()} products${alinks}</div>
        <div style="margin-top:9px">${anchor.categories.map(c=>`<span class="chip" style="background:#33384a;border-color:#454b61;color:#dfe3ec">${c}</span>`).join("")}</div></div>`;
   const ranked = DATA.filter(d=>d.id!==anchor.id)
@@ -1845,18 +2465,24 @@ function renderSim(id){
     const bnx=bandName(x.d.num_categories);
     const chips=x.shared.map(c=>`<span class="chip hit">${c}</span>`).join("");
     return `<div class="simrow">
-      <div class="co">${x.d.name}<small>${x.d.country||"—"} · ${bnx}</small></div>
+      <div class="co">${x.d.name}<small>${x.d.country||"—"} · <span tabindex="0" data-tip="${escAttr(BAND_TIPS[bnx])}">${bnx}</span></small></div>
       <div><div style="margin-bottom:6px">${chips}</div><div class="simbar"><i style="width:${(x.s*100).toFixed(0)}%"></i></div></div>
       <div class="score"><b>${x.shared.length}</b>shared · ${(x.s*100).toFixed(0)}% overlap</div></div>`;
   }).join("");
 }
 
-/* ---- fragmentation ---- */
-let FRAG=[], fragSortK="players", fragSortDir=-1;
+/* ---- fragmentation ----
+   Metrics (players, specialist share, roll-up read) live at the SPECIFIC category
+   level — that's where the signal is real. Categories are shelved under their
+   broad group purely for navigation; the group line only rolls up simple counts
+   (categories in the group, distinct companies active in it), both computed from
+   the data and labeled as such. */
+let FRAG=[], GROUPSTATS=new Map(), fragSortK="players", fragSortDir=-1;
+const fragOpen=new Set();      // which broad groups are expanded
 function buildFrag(){
   const m=new Map();
   DATA.forEach(d=> d.categories.forEach(c=>{
-    if(!m.has(c)) m.set(c,{cat:c,players:0,specialists:0,hasPlatform:false});
+    if(!m.has(c)) m.set(c,{cat:c,group:groupOf(c),players:0,specialists:0,hasPlatform:false});
     const r=m.get(c); r.players++; if(d.num_categories<=2) r.specialists++; if(bandName(d.num_categories)==="Platform") r.hasPlatform=true;
   }));
   FRAG=[...m.values()].map(r=>{
@@ -1868,23 +2494,39 @@ function buildFrag(){
            : (r.players>=4 && !r.hasPlatform) ? "Moderate" : "Low";
     return r;
   });
+  // distinct companies per broad group (a company counts once per group)
+  GROUPSTATS=new Map();
+  DATA.forEach(d=>{ new Set(d.categories.map(groupOf)).forEach(g=>
+    GROUPSTATS.set(g,(GROUPSTATS.get(g)||0)+1)); });
 }
 function sortFrag(k){ if(fragSortK===k) fragSortDir*=-1; else {fragSortK=k; fragSortDir=(k==="cat")?1:-1;} renderFrag(); }
 function renderFrag(){
-  const rows=[...FRAG].sort((a,b)=>{ let x=a[fragSortK],y=b[fragSortK];
+  const cmp=(a,b)=>{ let x=a[fragSortK],y=b[fragSortK];
     if(typeof x==="string") return fragSortDir*x.localeCompare(y);
-    if(typeof x==="boolean"){x=x?1:0;y=y?1:0;} return fragSortDir*((x)-(y)); });
+    if(typeof x==="boolean"){x=x?1:0;y=y?1:0;} return fragSortDir*((x)-(y)); };
   const cls={High:"frag-hi",Moderate:"frag-md",Low:"frag-lo"};
   const maxPlayers = Math.max(1, ...FRAG.map(r=>r.players));
+  const byGroup=new Map();
+  FRAG.forEach(r=>{ if(!byGroup.has(r.group)) byGroup.set(r.group,[]); byGroup.get(r.group).push(r); });
+  const order=GROUP_ORDER.filter(g=>byGroup.has(g));
   const body=document.getElementById("fragbody");
-  body.innerHTML = rows.map(r=>`<tr>
-    <td class="name" style="cursor:pointer"><a data-cat="${r.cat}">${r.cat}</a></td>
-    <td><span class="pbar"><i style="width:${(r.players/maxPlayers*100).toFixed(0)}%"></i></span><span class="mono">${r.players}</span></td>
-    <td class="mono">${(r.specShare*100).toFixed(0)}%</td>
-    <td>${r.hasPlatform?'<span style="color:var(--brick)">●</span> yes':'<span style="color:var(--muted)">— none</span>'}</td>
-    <td><span class="badge ${cls[r.read]}">${r.read}</span></td></tr>`).join("");
-  body.querySelectorAll("a[data-cat]").forEach(a=> a.addEventListener("click", ()=>{
-    reset(); state.cat=a.dataset.cat; document.getElementById("f-cat").value=a.dataset.cat; switchView("explore"); render();
+  body.innerHTML = order.map(g=>{
+    const rows=byGroup.get(g).sort(cmp), open=fragOpen.has(g), n=GROUPSTATS.get(g)||0;
+    const head=`<tr class="ghead" data-g="${escAttr(g)}"><td colspan="5"><span class="caret">${open?"▾":"▸"}</span>`+
+      `<b>${g}</b><span class="gmeta">${rows.length} categor${rows.length===1?"y":"ies"} · ${n.toLocaleString()} distinct companies</span></td></tr>`;
+    return head + (open ? rows.map(r=>`<tr>
+      <td class="name subcat" style="cursor:pointer"><a data-cat="${escAttr(r.cat)}">${r.cat}</a></td>
+      <td><span class="pbar"><i style="width:${(r.players/maxPlayers*100).toFixed(0)}%"></i></span><span class="mono">${r.players}</span></td>
+      <td class="mono">${(r.specShare*100).toFixed(0)}%</td>
+      <td>${r.hasPlatform?'<span style="color:var(--brick)">●</span> yes':'<span style="color:var(--muted)">— none</span>'}</td>
+      <td><span class="badge ${cls[r.read]}">${r.read}</span></td></tr>`).join("") : "");
+  }).join("");
+  body.querySelectorAll("tr.ghead").forEach(tr=> tr.addEventListener("click", ()=>{
+    const g=tr.dataset.g; fragOpen.has(g)?fragOpen.delete(g):fragOpen.add(g); renderFrag();
+  }));
+  body.querySelectorAll("a[data-cat]").forEach(a=> a.addEventListener("click", e=>{
+    e.stopPropagation();
+    reset(); state.cats.add(a.dataset.cat); syncTrees(); switchView("explore"); render();
   }));
 }
 
