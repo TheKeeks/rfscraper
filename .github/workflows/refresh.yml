@@ -1,0 +1,76 @@
+name: Refresh coverage data
+
+# Re-runs the scraper on a schedule, writes companies.json, and commits it.
+# GitHub Pages (serving from the repo root) redeploys automatically on the new commit,
+# so the tool always shows the latest pull.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Weekly, Mondays at 06:00 UTC. The directory changes slowly, so weekly is plenty.
+    - cron: "0 6 * * 1"
+    # For daily instead, replace the line above with:  - cron: "0 6 * * *"
+
+permissions:
+  contents: write          # needed to commit the refreshed data file
+
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install requests beautifulsoup4 lxml pandas openpyxl
+
+      - name: Scrape
+        run: python everythingrf_scraper.py --mode full
+
+      - name: Convert to companies.json for the tool
+        run: |
+          python3 - <<'PY'
+          import pandas as pd, json, os
+          df = pd.read_csv("everythingrf_companies.csv", dtype=str).fillna("")
+          def arr(s): return [x.strip() for x in str(s).split(";") if x.strip()]
+          def num(s):
+              try: return int(float(str(s).replace(",", "")))
+              except: return 0
+          out = []
+          for _, r in df.iterrows():
+              out.append({
+                  "id": r.get("everythingRF_ID",""),
+                  "name": r.get("Company",""),
+                  "country": r.get("Country",""),
+                  "city": r.get("City",""),
+                  "state": r.get("State/Region",""),
+                  "website": r.get("Website",""),
+                  "categories": arr(r.get("Categories_Supported","")),
+                  "num_categories": num(r.get("Num_Categories","")) or len(arr(r.get("Categories_Supported",""))),
+                  "total_products": num(r.get("Total_Products","")),
+                  "certifications": arr(r.get("Certifications","")),
+                  "end_markets": [],   # populated later if you add the Claude enrichment pass
+                  "profile_url": r.get("Profile_URL",""),
+              })
+          json.dump(out, open("companies.json","w"), indent=1)
+          print(f"wrote companies.json with {len(out)} companies")
+          PY
+
+      - name: Commit if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add companies.json
+          if git diff --staged --quiet; then
+            echo "No data change — nothing to commit."
+          else
+            git commit -m "Refresh coverage data ($(date -u +%Y-%m-%d))"
+            git push
+          fi
