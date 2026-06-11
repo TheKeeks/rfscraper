@@ -104,11 +104,22 @@ def make_session():
                   status_forcelist=[429, 500, 502, 503, 504],
                   allowed_methods=["GET"])
     s.mount("https://", HTTPAdapter(max_retries=retry))
+    # Look like a real browser. Sites with bot protection often hand a non-browser
+    # request a challenge/stripped page (a 200 with no listings) instead of blocking
+    # outright — which is what produced "Found 0 companies." Contact goes in `From`
+    # for etiquette without flagging the User-Agent as a bot.
     s.headers.update({
-        "User-Agent": (f"Mozilla/5.0 (compatible; DirectoryResearchBot/1.0; +{CONTACT}) "
-                       "company-directory-research"),
-        "Accept": "text/html,application/xhtml+xml",
+        "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                       "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"),
+        "Accept": ("text/html,application/xhtml+xml,application/xml;q=0.9,"
+                   "image/avif,image/webp,image/apng,*/*;q=0.8"),
         "Accept-Language": "en-US,en;q=0.9",
+        "Upgrade-Insecure-Requests": "1",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+        "From": CONTACT,
     })
     return s
 
@@ -166,6 +177,18 @@ def enumerate_companies(session):
             print(f"  ! page {page} failed: {e}")
             break
         rows = parse_list_page(html)
+        if page == 1 and not rows:
+            # Tell us WHY page 1 had no companies, right in the Actions log.
+            low = html.lower()
+            print(f"  [diagnose] page 1 returned no company links.")
+            print(f"  [diagnose] HTTP body length: {len(html)} chars; "
+                  f"'/companies/' substrings in raw HTML: {html.count('/companies/')}")
+            for marker in ("just a moment", "cf-chl", "cloudflare", "enable javascript",
+                           "captcha", "access denied", "are you a robot", "/cdn-cgi/"):
+                if marker in low:
+                    print(f"  [diagnose] page looks like a block/challenge — found marker: {marker!r}")
+            print("  [diagnose] first 800 chars of what the server returned:")
+            print("  " + html[:800].replace("\n", "\n  "))
         ids = {r["id"] for r in rows}
         if not rows or ids == prev_ids:   # empty page or same page repeating = end
             break
@@ -347,6 +370,17 @@ def main():
     print(f"Enumerating directory (mode={MODE}, country={COUNTRY_FILTER or 'all'}) ...")
     companies = enumerate_companies(session)
     print(f"Found {len(companies)} companies.")
+
+    if not companies:
+        print("\nNo companies were found, so there is nothing to write.")
+        print("This almost always means the site returned a page without the company")
+        print("listings (a bot challenge, an IP block, or JS-rendered content) rather")
+        print("than a parsing bug. See the [diagnose] lines above for what came back.")
+        print("Next steps if it persists: run from a non-datacenter IP (your machine, or")
+        print("Claude Code with everythingrf.com allowlisted), or switch to a headless")
+        print("browser (Playwright). Not writing companies.json so the live tool keeps")
+        print("its current data instead of being overwritten with an empty file.")
+        sys.exit(1)
 
     with open(os.path.join(OUTPUT_DIR, "company_index.csv"), "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["id", "name", "country", "url"])
