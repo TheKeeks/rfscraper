@@ -9,9 +9,11 @@
 <style>
   :root{
     --ink:#23283C; --gold:#CFA052; --brick:#8B2C2C;
-    --paper:#F7F8FA; --panel:#FFFFFF; --line:#E3E5EA; --muted:#6B7280; --text:#1B1E2B;
+    --paper:#F4F5F8; --panel:#FFFFFF; --line:#E3E5EA; --muted:#6B7280; --text:#1B1E2B;
     /* breadth ramp: narrow & deep -> broad. monochrome navy = "more breadth, darker" */
     --b1:#AEB8C7; --b2:#6E7E96; --b3:#3C4A63; --b4:#23283C;
+    --shadow:0 1px 2px rgba(35,40,60,.06),0 1px 8px rgba(35,40,60,.04);
+    --radius:10px;
     --sans:-apple-system,"Segoe UI","Aptos",Roboto,Arial,sans-serif;
     --serif:"EB Garamond",Georgia,serif;
     --mono:"SF Mono","Cascadia Code",ui-monospace,Menlo,Consolas,monospace;
@@ -21,6 +23,7 @@
   body{font-family:var(--sans);color:var(--text);background:var(--paper);font-size:14px;line-height:1.45}
   a{color:var(--ink)}
   .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
 
   /* top bar */
   header{background:var(--ink);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
@@ -34,10 +37,26 @@
   .btn:hover{filter:brightness(1.05)}
   .btn.ghost{background:transparent;color:#E7EAF0;border:1px solid #3A4156}
 
+  /* data-provenance banner (sample vs live) */
+  .banner{display:flex;align-items:center;gap:10px;padding:8px 20px;font-size:13px;border-bottom:1px solid var(--line)}
+  .banner.sample{background:#FBF3E0;color:#6b5418;border-bottom-color:#EAD9AE}
+  .banner.sample b{letter-spacing:.04em}
+  .banner.live{background:#EDF3EC;color:#2f4a33;border-bottom-color:#D6E3D5}
+  .banner .tag{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:4px;
+    padding:2px 7px;background:#CFA052;color:#fff;white-space:nowrap}
+  .banner.live .tag{background:#4C7A52}
+
+  /* at-a-glance strip — every figure computed from companies.json */
+  .kpis{display:flex;flex-wrap:wrap;gap:0;background:var(--panel);border-bottom:1px solid var(--line);padding:0 20px}
+  .kpi{padding:12px 26px 12px 0;margin-right:26px;border-right:1px solid var(--line)}
+  .kpi:last-child{border-right:none}
+  .kpi b{display:block;font-size:21px;font-weight:600;font-family:var(--mono);font-variant-numeric:tabular-nums;line-height:1.15}
+  .kpi span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+
   /* tabs */
   nav.tabs{display:flex;gap:2px;background:var(--ink);padding:0 20px}
   nav.tabs button{font:inherit;font-size:13px;color:#AEB6C6;background:transparent;border:none;cursor:pointer;
-    padding:10px 14px;border-bottom:2px solid transparent}
+    padding:11px 14px;border-bottom:2px solid transparent}
   nav.tabs button[aria-selected="true"]{color:#fff;border-bottom-color:var(--gold)}
   nav.tabs button:hover{color:#fff}
 
@@ -46,10 +65,11 @@
   .view.active{display:block}
 
   /* explore layout */
-  .explore{display:grid;grid-template-columns:248px 1fr;gap:20px;align-items:start}
-  .rail{position:sticky;top:14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+  .explore{display:grid;grid-template-columns:248px 1fr;gap:18px;align-items:start}
+  .rail{position:sticky;top:14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:14px;max-height:calc(100vh - 28px);overflow:auto}
   .rail h3{margin:0 0 10px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-  .fgroup{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+  .fgroup{margin-bottom:14px;padding-bottom:13px;border-bottom:1px solid var(--line)}
   .fgroup:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
   .fgroup label.cap{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
   input[type=search],select{width:100%;font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:#fff}
@@ -58,10 +78,12 @@
   .check input{accent-color:var(--ink);width:15px;height:15px}
   .check .n{margin-left:auto;color:var(--muted);font-size:12px}
   .clear{font-size:12px;color:var(--ink);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline}
+  .more{font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;padding:3px 0 0;text-decoration:underline}
 
   /* spectrum signature */
-  .spectrum{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:16px}
-  .spectrum .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
+  .spectrum{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:14px 16px;margin-bottom:16px}
+  .spectrum .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px;gap:12px;flex-wrap:wrap}
   .spectrum .top b{font-weight:600}
   .spectrum .top span{color:var(--muted);font-size:12px}
   .bar{display:flex;height:30px;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
@@ -73,31 +95,43 @@
   .legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;vertical-align:-1px}
 
   /* table */
-  .tablewrap{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .tablewrap{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
   .tablebar{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13px}
+  .scrollbox{overflow:auto;max-height:72vh}
   table{width:100%;border-collapse:collapse}
   th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
-  th{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);cursor:pointer;white-space:nowrap;user-select:none}
+  th{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);cursor:pointer;white-space:nowrap;
+    user-select:none;position:sticky;top:0;background:var(--panel);z-index:2;box-shadow:0 1px 0 var(--line)}
   th.sorted::after{content:" \25BE";color:var(--ink)}
   th.sorted.asc::after{content:" \25B4"}
-  tbody tr:hover{background:#F4F6F9}
+  tbody tr:nth-child(even){background:#FAFBFC}
+  tbody tr:hover{background:#F2F5F9}
   td.name{font-weight:600}
   td.name a{cursor:pointer;text-decoration:none;border-bottom:1px dotted #aab}
+  td.links{white-space:nowrap}
+  td.links a{text-decoration:none;color:var(--muted);font-size:12px;border:1px solid var(--line);border-radius:5px;
+    padding:1px 6px;margin-right:4px}
+  td.links a:hover{color:var(--ink);border-color:#c6cbd6}
   .badge{display:inline-block;font-size:11px;color:#fff;padding:2px 8px;border-radius:999px;white-space:nowrap}
+  .badge .bn{opacity:.75;font-family:var(--mono);margin-left:4px}
   .cats{color:var(--muted);font-size:12.5px}
   .chip{display:inline-block;background:#EEF1F5;border:1px solid var(--line);border-radius:5px;padding:1px 6px;
     margin:1px 3px 1px 0;font-size:11.5px;color:#33384a}
   .chip.hit{background:#FBF1DC;border-color:var(--gold);color:#6b5418}
+  .showall{width:100%;font:inherit;font-size:13px;color:var(--ink);background:#F4F6F9;border:none;border-top:1px solid var(--line);
+    padding:10px;cursor:pointer}
+  .showall:hover{background:#EDF0F5}
 
   /* similarity */
   .simwrap{max-width:920px}
   .pickrow{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:16px}
   .pickrow .fgroup{min-width:280px;margin:0;border:none;padding:0}
-  .anchor{background:var(--ink);color:#fff;border-radius:10px;padding:14px 16px;margin-bottom:14px}
+  .anchor{background:var(--ink);color:#fff;border-radius:var(--radius);padding:14px 16px;margin-bottom:14px;box-shadow:var(--shadow)}
   .anchor h2{margin:0 0 4px;font-size:18px}
   .anchor .meta{color:#B7BECC;font-size:13px}
+  .anchor .meta a{color:#D9C089;text-decoration:none;border-bottom:1px dotted #8a7748}
   .simrow{display:grid;grid-template-columns:200px 1fr 120px;gap:14px;align-items:center;padding:12px 14px;
-    border:1px solid var(--line);border-radius:9px;margin-bottom:8px;background:var(--panel)}
+    border:1px solid var(--line);border-radius:9px;margin-bottom:8px;background:var(--panel);box-shadow:var(--shadow)}
   .simrow .co{font-weight:600}
   .simrow .co small{display:block;font-weight:400;color:var(--muted);font-size:12px}
   .simbar{height:7px;background:#EEF1F5;border-radius:4px;overflow:hidden}
@@ -110,9 +144,17 @@
   .note{color:var(--muted);font-size:13px;margin:0 0 14px;max-width:640px}
   .frag-hi{color:#fff;background:var(--brick)} .frag-md{color:#5a4a1f;background:#F3E2BC} .frag-lo{color:#33384a;background:#E7EAF0}
   .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:0}
+  .pbar{display:inline-block;vertical-align:middle;height:8px;width:110px;background:#EEF1F5;border-radius:4px;
+    overflow:hidden;margin-right:8px}
+  .pbar i{display:block;height:100%;background:var(--b3)}
+
+  footer{padding:16px 20px 28px;color:var(--muted);font-size:12px;max-width:860px;line-height:1.5}
 
   .empty{padding:40px;text-align:center;color:var(--muted)}
-  @media (max-width:780px){ .explore{grid-template-columns:1fr} .rail{position:static} .simrow{grid-template-columns:1fr} }
+  @media (max-width:780px){
+    .explore{grid-template-columns:1fr} .rail{position:static;max-height:none} .simrow{grid-template-columns:1fr}
+    .kpi{padding:10px 16px 10px 0;margin-right:16px} .kpi b{font-size:17px}
+  }
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
   /* access gate */
@@ -141,12 +183,16 @@
 </div>
 <header>
   <div class="wordmark">RF &amp; Microwave<small>Coverage Map</small></div>
-  <span class="pill" id="count">—</span>
-  <span class="pill" title="This build ships with illustrative sample data. The daily refresh replaces it with the live everythingRF pull.">Illustrative sample · live data via daily refresh</span>
   <div class="grow"></div>
-  <span class="pill mono" id="asof">—</span>
-  <button class="btn" id="dl">Download CSV</button>
+  <span class="pill mono" id="asof" hidden></span>
+  <button class="btn" id="dl" title="Exports the rows matching the current Explore filters">Download CSV</button>
 </header>
+<div id="databanner" class="banner sample">
+  <span class="tag" id="banner-tag">Sample data</span>
+  <span id="banner-text">This build ships with <b>illustrative sample data — the companies below are fictional.</b>
+    The weekly refresh replaces it with the live everythingRF pull.</span>
+</div>
+<div class="kpis" id="kpis"></div>
 <nav class="tabs" role="tablist">
   <button role="tab" aria-selected="true" data-view="explore">Explore</button>
   <button role="tab" aria-selected="false" data-view="similar">Capability adjacency</button>
@@ -184,10 +230,10 @@
         <div class="tablewrap">
           <div class="tablebar"><span id="result-n" class="mono"></span><span class="grow"></span>
             <span style="color:var(--muted)">Click a company to see its closest peers →</span></div>
-          <div style="overflow-x:auto"><table id="tbl">
+          <div class="scrollbox"><table id="tbl">
             <thead><tr>
               <th data-k="name">Company</th><th data-k="country">Country</th>
-              <th data-k="num_categories">Breadth</th><th data-k="num_categories">#Cats</th>
+              <th data-k="num_categories" title="Number of product categories — the Specialist→Platform breadth band">Breadth</th>
               <th>Categories</th><th>Certs</th><th data-k="total_products">Products</th><th></th>
             </tr></thead><tbody id="tbody"></tbody>
           </table></div>
@@ -224,6 +270,12 @@
     </div>
   </section>
 </main>
+<footer>
+  Source: everythingRF company directory, loaded from <span class="mono">companies.json</span>.
+  Every figure on this page is computed from that file — the breadth bands, Jaccard overlap and
+  fragmentation read are derived in-browser from category lists; nothing is estimated or added.
+  Fields the directory doesn't provide are shown as —.
+</footer>
 
 <script>
 const EMBEDDED_SAMPLE = /*__DATA__*/[
@@ -1583,17 +1635,54 @@ const bandColor = {Specialist:"var(--b1)", Focused:"var(--b2)", Broadline:"var(-
 const BANDS = ["Specialist","Focused","Broadline","Platform"];
 
 const state = {q:"", bands:new Set(), countries:new Set(), certs:new Set(), markets:new Set(),
-               cat:"", sortK:"num_categories", sortDir:-1};
+               cat:"", sortK:"num_categories", sortDir:-1, showAll:false};
+const ROW_CAP = 250;      // rows rendered before "Show all" — keeps first paint snappy on the full pull
+let DATA_DATE = "";       // Last-Modified of companies.json (server metadata, not a guess)
 
 async function load(){
   try{
     const r = await fetch("companies.json", {cache:"no-store"});
     if(!r.ok) throw 0;
     DATA = await r.json();
+    const lm = r.headers.get("last-modified");
+    if(lm){ const d=new Date(lm); if(!isNaN(d)) DATA_DATE = d.toISOString().slice(0,10); }
   }catch(e){ DATA = EMBEDDED_SAMPLE; }
   DATA.forEach(d=>{ d.categories=d.categories||[]; d.certifications=d.certifications||[];
     d.end_markets=d.end_markets||[]; d.num_categories=d.num_categories ?? d.categories.length; });
   init();
+}
+
+// The bundled sample's fictional companies all carry *.example.com websites; the live
+// everythingRF pull never does. Used only to pick the right banner — never to alter data.
+const isSample = () => DATA.some(d => /\.example\.com/i.test(d.website||""));
+
+function renderBanner(){
+  const b=document.getElementById("databanner"), tag=document.getElementById("banner-tag"),
+        txt=document.getElementById("banner-text");
+  if(isSample()){
+    b.className="banner sample"; tag.textContent="Sample data";
+    txt.innerHTML="This build ships with <b>illustrative sample data — the companies below are fictional.</b> "+
+      "The weekly refresh replaces it with the live everythingRF pull.";
+  }else{
+    b.className="banner live"; tag.textContent="Live data";
+    txt.textContent="Showing the live everythingRF directory pull"+(DATA_DATE?` (file updated ${DATA_DATE})`:"")+".";
+  }
+}
+
+function renderKPIs(){
+  const k=document.getElementById("kpis");
+  const countries=new Set(), cats=new Set(); let products=0;
+  DATA.forEach(d=>{ if(d.country) countries.add(d.country); d.categories.forEach(c=>cats.add(c));
+    products+=d.total_products||0; });
+  const breadths=DATA.map(d=>d.num_categories).sort((a,b)=>a-b);
+  const median=breadths.length? (breadths.length%2 ? breadths[(breadths.length-1)/2]
+    : (breadths[breadths.length/2-1]+breadths[breadths.length/2])/2) : 0;
+  const kpi=(v,l)=>`<div class="kpi"><b>${v}</b><span>${l}</span></div>`;
+  k.innerHTML = kpi(DATA.length.toLocaleString(),"companies")
+    + kpi(countries.size,"countries")
+    + kpi(cats.size,"product categories")
+    + kpi(median,"median breadth")
+    + kpi(products.toLocaleString(),"products listed");
 }
 
 function uniqCount(getter){
@@ -1603,20 +1692,38 @@ function uniqCount(getter){
 }
 
 function checkList(elId, items, setRef){
+  // Long lists (50 countries, dozens of certs on the live pull) collapse to the top
+  // entries with a "show all" toggle so the rail stays scannable.
+  const VISIBLE = 8;
   const el = document.getElementById(elId); el.innerHTML="";
-  items.forEach(([val,n])=>{
+  if(!items.length){ const g=el.closest(".fgroup"); if(g) g.style.display="none"; return; }
+  items.forEach(([val,n],i)=>{
     const id = elId+"-"+val.replace(/\W/g,"");
     const row = document.createElement("label"); row.className="check";
+    if(i>=VISIBLE) row.hidden = true;
     row.innerHTML = `<input type="checkbox" id="${id}"><span>${val}</span><span class="n mono">${n}</span>`;
     row.querySelector("input").addEventListener("change", e=>{
       e.target.checked ? setRef.add(val) : setRef.delete(val); render();
     });
     el.appendChild(row);
   });
+  if(items.length>VISIBLE){
+    const t=document.createElement("button"); t.type="button"; t.className="more";
+    let open=false;
+    const label=()=> t.textContent = open ? "Show fewer" : `Show all ${items.length}`;
+    label();
+    t.addEventListener("click", ()=>{ open=!open;
+      [...el.querySelectorAll("label.check")].forEach((r,i)=>{ if(i>=VISIBLE) r.hidden=!open; }); label(); });
+    el.appendChild(t);
+  }
 }
 
 function init(){
-  document.getElementById("asof").textContent = "as of " + new Date().toISOString().slice(0,10);
+  // Show the data file's own Last-Modified date when the server provides one;
+  // anything else (like today's date) would imply a freshness the data may not have.
+  const asof=document.getElementById("asof");
+  if(DATA_DATE){ asof.textContent = "data updated " + DATA_DATE; asof.hidden=false; }
+  renderBanner(); renderKPIs();
   // band filter (ordered, with counts)
   const bandCounts = {}; BANDS.forEach(b=>bandCounts[b]=0);
   DATA.forEach(d=>bandCounts[bandName(d.num_categories)]++);
@@ -1639,7 +1746,6 @@ function init(){
   [...DATA].sort((a,b)=>a.name.localeCompare(b.name)).forEach(d=> sp.add(new Option(d.name, d.id)));
   sp.addEventListener("change", ()=>renderSim(sp.value));
   document.querySelectorAll("#fragtbl th[data-fk]").forEach(th=> th.addEventListener("click", ()=>sortFrag(th.dataset.fk)));
-  document.getElementById("count").textContent = DATA.length + " companies";
   buildFrag();
   render(); renderSim(sp.value || (DATA[0] && DATA[0].id)); renderFrag();
 }
@@ -1676,23 +1782,31 @@ function render(){
   document.querySelectorAll("#tbl th").forEach(th=>th.classList.remove("sorted","asc"));
   const sortedTh = [...document.querySelectorAll("#tbl th[data-k]")].find(th=>th.dataset.k===state.sortK);
   if(sortedTh){ sortedTh.classList.add("sorted"); if(state.sortDir===1) sortedTh.classList.add("asc"); }
-  if(!rows.length){ tb.innerHTML='<tr><td colspan="8"><div class="empty">No companies match these filters. Reset to start over.</div></td></tr>'; return; }
-  rows.forEach(d=>{
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="7"><div class="empty">No companies match these filters. Reset to start over.</div></td></tr>'; return; }
+  const shown = state.showAll ? rows : rows.slice(0, ROW_CAP);
+  shown.forEach(d=>{
     const bn = bandName(d.num_categories);
     const cats = d.categories.slice(0,6).map(c=>`<span class="chip">${c}</span>`).join("")
       + (d.categories.length>6 ? ` <span class="cats">+${d.categories.length-6}</span>` : "");
+    const links = (d.profile_url?`<a href="${d.profile_url}" target="_blank" rel="noopener" title="everythingRF profile">profile ↗</a>`:"")
+      + (d.website?`<a href="${d.website}" target="_blank" rel="noopener" title="${d.website}">site ↗</a>`:"");
     const tr = document.createElement("tr");
     tr.innerHTML = `<td class="name"><a data-id="${d.id}">${d.name}</a></td>
       <td>${d.country||"—"}</td>
-      <td><span class="badge" style="background:${bandColor[bn]}">${bn}</span></td>
-      <td class="mono">${d.num_categories}</td>
+      <td><span class="badge" style="background:${bandColor[bn]}">${bn}<span class="bn">${d.num_categories}</span></span></td>
       <td class="cats">${cats||"—"}</td>
       <td class="cats">${d.certifications.join(", ")||"—"}</td>
       <td class="mono">${(d.total_products||0).toLocaleString()}</td>
-      <td>${d.profile_url?`<a href="${d.profile_url}" target="_blank" rel="noopener">↗</a>`:""}</td>`;
+      <td class="links">${links}</td>`;
     tr.querySelector("a[data-id]").addEventListener("click", ()=>{ switchView("similar"); document.getElementById("sim-pick").value=d.id; renderSim(d.id); });
     tb.appendChild(tr);
   });
+  if(rows.length > shown.length){
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td colspan="7" style="padding:0"><button class="showall">Show all ${rows.length.toLocaleString()} rows (first ${ROW_CAP} shown)</button></td>`;
+    tr.querySelector("button").addEventListener("click", ()=>{ state.showAll=true; render(); });
+    tb.appendChild(tr);
+  }
 }
 
 function renderSpectrum(rows){
@@ -1714,10 +1828,12 @@ function jaccard(a,b){ const A=new Set(a),B=new Set(b); let i=0; A.forEach(x=>{i
 function renderSim(id){
   const anchor = DATA.find(d=>d.id===id) || DATA[0]; if(!anchor) return;
   const bn=bandName(anchor.num_categories);
+  const alinks = (anchor.profile_url?` · <a href="${anchor.profile_url}" target="_blank" rel="noopener">profile ↗</a>`:"")
+    + (anchor.website?` · <a href="${anchor.website}" target="_blank" rel="noopener">site ↗</a>`:"");
   document.getElementById("sim-anchor").innerHTML =
     `<div class="anchor"><h2>${anchor.name}</h2>
        <div class="meta">${anchor.country||"—"} · <span class="badge" style="background:${bandColor[bn]}">${bn}</span>
-       · ${anchor.num_categories} categories · ${(anchor.total_products||0).toLocaleString()} products</div>
+       · ${anchor.num_categories} categories · ${(anchor.total_products||0).toLocaleString()} products${alinks}</div>
        <div style="margin-top:9px">${anchor.categories.map(c=>`<span class="chip" style="background:#33384a;border-color:#454b61;color:#dfe3ec">${c}</span>`).join("")}</div></div>`;
   const ranked = DATA.filter(d=>d.id!==anchor.id)
     .map(d=>({d, s:jaccard(anchor.categories,d.categories),
@@ -1759,10 +1875,11 @@ function renderFrag(){
     if(typeof x==="string") return fragSortDir*x.localeCompare(y);
     if(typeof x==="boolean"){x=x?1:0;y=y?1:0;} return fragSortDir*((x)-(y)); });
   const cls={High:"frag-hi",Moderate:"frag-md",Low:"frag-lo"};
+  const maxPlayers = Math.max(1, ...FRAG.map(r=>r.players));
   const body=document.getElementById("fragbody");
   body.innerHTML = rows.map(r=>`<tr>
     <td class="name" style="cursor:pointer"><a data-cat="${r.cat}">${r.cat}</a></td>
-    <td class="mono">${r.players}</td>
+    <td><span class="pbar"><i style="width:${(r.players/maxPlayers*100).toFixed(0)}%"></i></span><span class="mono">${r.players}</span></td>
     <td class="mono">${(r.specShare*100).toFixed(0)}%</td>
     <td>${r.hasPlatform?'<span style="color:var(--brick)">●</span> yes':'<span style="color:var(--muted)">— none</span>'}</td>
     <td><span class="badge ${cls[r.read]}">${r.read}</span></td></tr>`).join("");
