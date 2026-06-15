@@ -40,7 +40,7 @@
    "Torque Wrenches"
   ],
   "num_categories": 12,
-  "total_products": 200,
+  "total_products": 201,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/2529/hsinlink"
@@ -505,7 +505,7 @@
    "Waveguide to Coax Adapters"
   ],
   "num_categories": 15,
-  "total_products": 748,
+  "total_products": 749,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/2695/5o-com-inc"
@@ -14082,7 +14082,7 @@
    "SATCOM Amplifier Systems"
   ],
   "num_categories": 3,
-  "total_products": 983,
+  "total_products": 984,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/446/exodus-advanced-communications"
@@ -20253,7 +20253,7 @@
    "Amplifiers"
   ],
   "num_categories": 1,
-  "total_products": 3,
+  "total_products": 4,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/2276/k-pa-inc"
@@ -25574,7 +25574,7 @@
    "Waveguide to Coax Adapters"
   ],
   "num_categories": 56,
-  "total_products": 6216,
+  "total_products": 6217,
   "certifications": [
    "AS 9100 ISO 14001:2004 ISO 9001:2008",
    "ISO 14001:2004"
@@ -31559,7 +31559,7 @@
    "Wireless Chipsets"
   ],
   "num_categories": 38,
-  "total_products": 1986,
+  "total_products": 1987,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/483/qorvo"
@@ -33500,7 +33500,7 @@
    "Shielded Test Enclosures"
   ],
   "num_categories": 3,
-  "total_products": 322,
+  "total_products": 323,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/907/rf-electronics"
@@ -39598,7 +39598,7 @@
    "Terminations"
   ],
   "num_categories": 8,
-  "total_products": 1452,
+  "total_products": 1453,
   "certifications": [
    "AS 9100 ISO 9001:2008",
    "ISO 9001:2008"
@@ -43522,6 +43522,7 @@
   "state": "MA",
   "website": "https://vaunix.com/",
   "categories": [
+   "Amplifiers",
    "Attenuator Matrices",
    "Butler Matrices",
    "Digital Attenuators",
@@ -43534,8 +43535,8 @@
    "Variable Attenuators",
    "Waveguide Filters"
   ],
-  "num_categories": 11,
-  "total_products": 115,
+  "num_categories": 12,
+  "total_products": 116,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/110/vaunix"
@@ -44146,7 +44147,7 @@
    "Wireless Charging Coils"
   ],
   "num_categories": 9,
-  "total_products": 135,
+  "total_products": 136,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/793/vishay"
@@ -47300,9 +47301,10 @@
   "state": "Ashburn VA",
   "website": "https://www.domotactical.com/",
   "categories": [
-   "Software Defined Radios"
+   "Software Defined Radios",
+   "Tracking Antennas"
   ],
-  "num_categories": 1,
+  "num_categories": 2,
   "total_products": 5,
   "certifications": [],
   "end_markets": [],
@@ -50131,8 +50133,8 @@
   "id": "2607",
   "name": "TMS Test Services",
   "country": "United States",
-  "city": "CO 80111",
-  "state": "United States.",
+  "city": "7776 South Pointe Parkway #134  Phoenix",
+  "state": "AZ",
   "website": "https://tmstestservices.com/",
   "categories": [
    "Cables",
