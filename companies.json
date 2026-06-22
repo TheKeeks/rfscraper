@@ -30,6 +30,7 @@
    "All Antennas",
    "Between Series RF Adapters",
    "Cable Assemblies",
+   "Connectors",
    "DC Blocks",
    "Fixed Attenuators",
    "Horn Antennas",
@@ -39,8 +40,8 @@
    "Terminations",
    "Torque Wrenches"
   ],
-  "num_categories": 12,
-  "total_products": 201,
+  "num_categories": 13,
+  "total_products": 203,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/2529/hsinlink"
@@ -1687,7 +1688,7 @@
    "Zener Diodes"
   ],
   "num_categories": 3,
-  "total_products": 19,
+  "total_products": 0,
   "certifications": [
    "ISO 9001:2008"
   ],
@@ -2184,7 +2185,7 @@
    "Omni-Directional Antennas"
   ],
   "num_categories": 6,
-  "total_products": 87,
+  "total_products": 108,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/116/ah-systems-inc"
@@ -2403,7 +2404,7 @@
    "Omni-Directional Antennas"
   ],
   "num_categories": 3,
-  "total_products": 388,
+  "total_products": 359,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/688/alaris-antennas"
@@ -2420,7 +2421,7 @@
    "GPS/GNSS Antennas"
   ],
   "num_categories": 2,
-  "total_products": 139,
+  "total_products": 141,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/1445/cojot"
@@ -3209,6 +3210,7 @@
    "Amplifiers",
    "Band Pass Filters",
    "Band Stop Filters",
+   "Base Station Antennas",
    "DC Blocks",
    "Diplexers",
    "Directional Couplers",
@@ -3224,8 +3226,8 @@
    "Triplexers",
    "Waveguide Filters"
   ],
-  "num_categories": 20,
-  "total_products": 930,
+  "num_categories": 21,
+  "total_products": 1129,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/733/procom-a-s"
@@ -3254,7 +3256,7 @@
    "Terminations"
   ],
   "num_categories": 14,
-  "total_products": 6927,
+  "total_products": 7004,
   "certifications": [
    "ISO 9001:2008"
   ],
@@ -3275,7 +3277,7 @@
    "Transistors"
   ],
   "num_categories": 4,
-  "total_products": 382,
+  "total_products": 311,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/706/ampleon"
@@ -3358,7 +3360,7 @@
    "Waveguide to Coax Adapters"
   ],
   "num_categories": 18,
-  "total_products": 789,
+  "total_products": 815,
   "certifications": [
    "ISO 9001:2015"
   ],
@@ -3805,6 +3807,7 @@
    "Scalar Network Analyzers",
    "Shielded Test Enclosures",
    "Signal Generators",
+   "Software Defined Radios",
    "Spectrum Analyzers",
    "Spectrum Monitoring Receivers",
    "Terminations",
@@ -3815,8 +3818,8 @@
    "Voltage Controlled Oscillators",
    "Waveguide to Coax Adapters"
   ],
-  "num_categories": 41,
-  "total_products": 342,
+  "num_categories": 42,
+  "total_products": 343,
   "certifications": [
    "ISO 14001:2004 ISO 9001:2008",
    "ISO 14001:2004",
@@ -4096,15 +4099,17 @@
   "state": "Herts",
   "website": "https://www.antenova.com/",
   "categories": [
+   "Adapters - In Series",
    "All Antennas",
    "Antenna Design Services",
+   "Between Series RF Adapters",
    "GNSS Modules / Receivers",
    "GPS/GNSS Antennas",
    "Omni-Directional Antennas",
    "RF & Microwave Testing"
   ],
-  "num_categories": 6,
-  "total_products": 85,
+  "num_categories": 8,
+  "total_products": 92,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/33/antenova"
@@ -6741,7 +6746,7 @@
    "Wireless Chipsets"
   ],
   "num_categories": 8,
-  "total_products": 168,
+  "total_products": 148,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/950/broadcom"
@@ -6792,13 +6797,19 @@
   "id": "1702",
   "name": "BSC Filters Limited",
   "country": "United Kingdom",
-  "city": "",
-  "state": "",
-  "website": "",
-  "categories": [],
-  "num_categories": 0,
-  "total_products": 0,
-  "certifications": [],
+  "city": "York",
+  "state": "YO30 4WU",
+  "website": "https://www.bscfilters.com/",
+  "categories": [
+   "Switched Filter Banks"
+  ],
+  "num_categories": 1,
+  "total_products": 1,
+  "certifications": [
+   "ISO 9001 ISO 9001:2015",
+   "ISO 9001",
+   "ISO 9001:2015"
+  ],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/1702/bsc-filters-limited"
  },
@@ -8304,7 +8315,7 @@
    "Transistors"
   ],
   "num_categories": 8,
-  "total_products": 265,
+  "total_products": 256,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/953/cml-microcircuits"
@@ -8567,7 +8578,7 @@
    "Transceivers"
   ],
   "num_categories": 9,
-  "total_products": 18,
+  "total_products": 19,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/1613/collins-aerospace"
@@ -10528,7 +10539,7 @@
    "Waveguide to Coax Adapters"
   ],
   "num_categories": 37,
-  "total_products": 1096,
+  "total_products": 1097,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/381/dbm-corporation"
@@ -12536,8 +12547,13 @@
   "city": "Davis",
   "state": "CA",
   "website": "https://elvespeed.com/",
-  "categories": [],
-  "num_categories": 0,
+  "categories": [
+   "Amplifiers",
+   "SATCOM Amplifier Systems",
+   "Traveling Wave Tubes",
+   "Waveguide Amplifiers"
+  ],
+  "num_categories": 4,
   "total_products": 0,
   "certifications": [],
   "end_markets": [],
@@ -13424,7 +13440,7 @@
    "Switches"
   ],
   "num_categories": 15,
-  "total_products": 219,
+  "total_products": 0,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/1847/esj-technology"
@@ -13501,7 +13517,7 @@
    "Voltage Controlled Oscillators"
   ],
   "num_categories": 9,
-  "total_products": 261,
+  "total_products": 315,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/118/et-industries"
@@ -14082,7 +14098,7 @@
    "SATCOM Amplifier Systems"
   ],
   "num_categories": 3,
-  "total_products": 984,
+  "total_products": 985,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/446/exodus-advanced-communications"
@@ -15683,7 +15699,7 @@
    "Transistors"
   ],
   "num_categories": 2,
-  "total_products": 25,
+  "total_products": 8,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/1731/gallium-semiconductor"
@@ -17875,7 +17891,7 @@
    "Terminations"
   ],
   "num_categories": 11,
-  "total_products": 75,
+  "total_products": 76,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/447/hyperlabs-inc"
@@ -18081,7 +18097,7 @@
    "Transistors"
   ],
   "num_categories": 4,
-  "total_products": 12,
+  "total_products": 7,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/1373/iconic-rf"
@@ -18586,7 +18602,7 @@
    "Wireless Chipsets"
   ],
   "num_categories": 16,
-  "total_products": 179,
+  "total_products": 171,
   "certifications": [
    "ISO 9001:2008"
   ],
@@ -19073,7 +19089,7 @@
    "Transistors"
   ],
   "num_categories": 2,
-  "total_products": 313,
+  "total_products": 284,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/396/integra-technologies-inc"
@@ -19927,7 +19943,7 @@
    "Variable Attenuators"
   ],
   "num_categories": 22,
-  "total_products": 838,
+  "total_products": 887,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/63/jfw-industries"
@@ -20347,7 +20363,7 @@
    "Variable Attenuators"
   ],
   "num_categories": 4,
-  "total_products": 11,
+  "total_products": 9,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/1459/kcb-solutions"
@@ -21198,6 +21214,7 @@
    "All Antennas",
    "Amplifiers",
    "Data Links",
+   "Direction Finding Antennas",
    "GNSS Anti-Jamming Solutions",
    "Magnetrons",
    "RADAR Systems",
@@ -21211,8 +21228,8 @@
    "VSAT Terminals",
    "Waveguide Shims & Spacers"
   ],
-  "num_categories": 15,
-  "total_products": 73,
+  "num_categories": 16,
+  "total_products": 74,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/1497/l3harris-technologies"
@@ -22658,7 +22675,7 @@
    "Zener Diodes"
   ],
   "num_categories": 37,
-  "total_products": 3320,
+  "total_products": 3132,
   "certifications": [
    "ISO 14001 ISO 9001",
    "ISO 14001",
@@ -22874,8 +22891,10 @@
    "Switches",
    "Terminations",
    "Tunable Filters",
+   "Waveguide Attenuators",
    "Waveguide Bends",
    "Waveguide Couplers",
+   "Waveguide Detectors",
    "Waveguide Isolators",
    "Waveguide Mixers",
    "Waveguide Power Combiners & Dividers",
@@ -22883,8 +22902,8 @@
    "Waveguide Terminations",
    "Waveguide Twists"
   ],
-  "num_categories": 38,
-  "total_products": 1679,
+  "num_categories": 40,
+  "total_products": 1737,
   "certifications": [
    "ISO 9001:2015"
   ],
@@ -23185,7 +23204,7 @@
    "Waveguide to Coax Adapters"
   ],
   "num_categories": 37,
-  "total_products": 1096,
+  "total_products": 1097,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/251/maury-microwave"
@@ -23850,7 +23869,7 @@
    "Waveguide Filters"
   ],
   "num_categories": 44,
-  "total_products": 991,
+  "total_products": 993,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/220/mercury-systems"
@@ -24498,7 +24517,7 @@
    "XO"
   ],
   "num_categories": 35,
-  "total_products": 832,
+  "total_products": 715,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/403/microchip-technology-inc"
@@ -24982,13 +25001,33 @@
   "id": "476",
   "name": "Microwave Filter Company",
   "country": "United States",
-  "city": "",
-  "state": "",
-  "website": "",
-  "categories": [],
-  "num_categories": 0,
-  "total_products": 0,
-  "certifications": [],
+  "city": "East Syracuse",
+  "state": "New York",
+  "website": "http://www.microwavefilter.com/",
+  "categories": [
+   "All Isolators",
+   "Band Pass Filters",
+   "Band Stop Filters",
+   "Coaxial Isolators",
+   "Diplexers",
+   "Directional Couplers",
+   "Duplexers",
+   "Fixed Attenuators",
+   "High Pass Filters",
+   "Low Pass Filters",
+   "Power Dividers / Combiners",
+   "Terminations",
+   "Tunable Filters",
+   "Variable Attenuators",
+   "Waveguide Diplexers",
+   "Waveguide Filters",
+   "Waveguide to Coax Adapters"
+  ],
+  "num_categories": 17,
+  "total_products": 380,
+  "certifications": [
+   "ISO 9001:2015"
+  ],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/476/microwave-filter-company"
  },
@@ -25215,6 +25254,7 @@
    "Antenna Positioners",
    "Automotive Radar OTA Test Solutions",
    "Compact Range Systems",
+   "EMF Meters & Antennas",
    "Horn Antennas",
    "Near Field Probes",
    "Phantoms",
@@ -25225,8 +25265,8 @@
    "SAR Probes",
    "Shielded Test Enclosures"
   ],
-  "num_categories": 16,
-  "total_products": 354,
+  "num_categories": 17,
+  "total_products": 355,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/355/microwave-vision-group"
@@ -25237,9 +25277,23 @@
   "country": "Italy",
   "city": "",
   "state": "",
-  "website": "",
-  "categories": [],
-  "num_categories": 0,
+  "website": "https://www.mw-tvc.com/",
+  "categories": [
+   "Coaxial Circulators",
+   "Coaxial Isolators",
+   "Connectors",
+   "Directional Couplers",
+   "Drop-In Circulators",
+   "Drop-In Isolators",
+   "Flexible Waveguides",
+   "Waveguide Attenuators",
+   "Waveguide Circulators",
+   "Waveguide Couplers",
+   "Waveguide Diplexers",
+   "Waveguide to Coax Adapters",
+   "Waveguide Twists"
+  ],
+  "num_categories": 13,
   "total_products": 0,
   "certifications": [],
   "end_markets": [],
@@ -25574,7 +25628,7 @@
    "Waveguide to Coax Adapters"
   ],
   "num_categories": 56,
-  "total_products": 6217,
+  "total_products": 6253,
   "certifications": [
    "AS 9100 ISO 14001:2004 ISO 9001:2008",
    "ISO 14001:2004"
@@ -25701,7 +25755,7 @@
    "Transistors"
   ],
   "num_categories": 3,
-  "total_products": 83,
+  "total_products": 62,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/347/mitsubishi-electric-us-inc"
@@ -26175,7 +26229,7 @@
    "RF Probes"
   ],
   "num_categories": 4,
-  "total_products": 67,
+  "total_products": 68,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/457/mpi-corporation"
@@ -26673,7 +26727,7 @@
    "Spectrum Analyzers"
   ],
   "num_categories": 6,
-  "total_products": 55,
+  "total_products": 54,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/443/narda-safety-test-solutions"
@@ -26792,7 +26846,7 @@
    "Waveguide Transitions"
   ],
   "num_categories": 52,
-  "total_products": 10673,
+  "total_products": 10670,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/74/miteq"
@@ -26832,7 +26886,7 @@
    "Voltage Controlled Oscillators"
   ],
   "num_categories": 25,
-  "total_products": 100,
+  "total_products": 101,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/189/national-instruments"
@@ -27741,7 +27795,7 @@
    "Switches"
   ],
   "num_categories": 5,
-  "total_products": 60,
+  "total_products": 61,
   "certifications": [
    "ISO 9001:2008"
   ],
@@ -28270,7 +28324,7 @@
    "Zener Diodes"
   ],
   "num_categories": 22,
-  "total_products": 2172,
+  "total_products": 1930,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/241/nxp-semiconductors"
@@ -28760,7 +28814,7 @@
    "Switch Matrix"
   ],
   "num_categories": 4,
-  "total_products": 7,
+  "total_products": 17,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/2530/orbis-systems"
@@ -29816,7 +29870,7 @@
    "Time and Frequency Standards"
   ],
   "num_categories": 2,
-  "total_products": 14,
+  "total_products": 16,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/1545/pendulum-instruments"
@@ -30602,7 +30656,7 @@
    "Transistors"
   ],
   "num_categories": 2,
-  "total_products": 205,
+  "total_products": 198,
   "certifications": [
    "ISO 9001:2015 ISO 9001:2015",
    "ISO 9001:2015"
@@ -31559,7 +31613,7 @@
    "Wireless Chipsets"
   ],
   "num_categories": 38,
-  "total_products": 1987,
+  "total_products": 1939,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/483/qorvo"
@@ -32662,7 +32716,7 @@
    "Voltage Controlled Oscillators"
   ],
   "num_categories": 20,
-  "total_products": 571,
+  "total_products": 572,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/1077/raltron"
@@ -34111,7 +34165,7 @@
    "Transistors"
   ],
   "num_categories": 6,
-  "total_products": 295,
+  "total_products": 277,
   "certifications": [
    "ISO 14001:2015 ISO 9001",
    "ISO 14001:2015",
@@ -34768,7 +34822,7 @@
    "Waveguide Mixers"
   ],
   "num_categories": 52,
-  "total_products": 472,
+  "total_products": 473,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/92/rohde-schwarz"
@@ -38997,7 +39051,7 @@
    "Waveguide to Coax Adapters"
   ],
   "num_categories": 6,
-  "total_products": 247,
+  "total_products": 246,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/211/steatite"
@@ -39105,7 +39159,7 @@
    "Wireless Chipsets"
   ],
   "num_categories": 21,
-  "total_products": 217,
+  "total_products": 179,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/656/stmicroelectronics"
@@ -39269,7 +39323,7 @@
    "Transistors"
   ],
   "num_categories": 3,
-  "total_products": 326,
+  "total_products": 135,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/1196/sumitomo-electric-device-innovations"
@@ -39491,7 +39545,7 @@
    "Variable Attenuators"
   ],
   "num_categories": 9,
-  "total_products": 64,
+  "total_products": 67,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/1074/superapex-corporation"
@@ -39598,7 +39652,7 @@
    "Terminations"
   ],
   "num_categories": 8,
-  "total_products": 1453,
+  "total_products": 1454,
   "certifications": [
    "AS 9100 ISO 9001:2008",
    "ISO 9001:2008"
@@ -39808,7 +39862,7 @@
    "XO"
   ],
   "num_categories": 26,
-  "total_products": 711,
+  "total_products": 723,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/98/synergy-microwave-corporation"
@@ -42770,7 +42824,7 @@
    "V2X Modules"
   ],
   "num_categories": 9,
-  "total_products": 241,
+  "total_products": 243,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/315/u-blox-ag"
@@ -43196,7 +43250,7 @@
    "Voltage Controlled Oscillators"
   ],
   "num_categories": 15,
-  "total_products": 289,
+  "total_products": 277,
   "certifications": [
    "ISO 14001 ISO 9001 ISO/TS 16949",
    "ISO 14001",
@@ -43566,7 +43620,7 @@
    "Amplifiers"
   ],
   "num_categories": 1,
-  "total_products": 56,
+  "total_products": 57,
   "certifications": [
    "ISO 9001:2015"
   ],
@@ -44147,7 +44201,7 @@
    "Wireless Charging Coils"
   ],
   "num_categories": 9,
-  "total_products": 136,
+  "total_products": 384,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/793/vishay"
@@ -44648,7 +44702,7 @@
    "Transistors"
   ],
   "num_categories": 5,
-  "total_products": 125,
+  "total_products": 81,
   "certifications": [
    "ISO 14001:2015 ISO 9001:2015",
    "ISO 14001:2015",
@@ -44719,7 +44773,7 @@
    "Transistors"
   ],
   "num_categories": 2,
-  "total_products": 80,
+  "total_products": 47,
   "certifications": [
    "ISO 9001:2015"
   ],
@@ -47120,7 +47174,7 @@
    "Waveguide Transitions"
   ],
   "num_categories": 37,
-  "total_products": 232,
+  "total_products": 231,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/2059/com-mw"
@@ -47305,7 +47359,7 @@
    "Tracking Antennas"
   ],
   "num_categories": 2,
-  "total_products": 5,
+  "total_products": 6,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/2333/domo-tactical-communications"
@@ -48560,7 +48614,7 @@
    "Variable Attenuators"
   ],
   "num_categories": 17,
-  "total_products": 1330,
+  "total_products": 1332,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/1833/fujian-micable"
@@ -48762,7 +48816,7 @@
    "Transceivers"
   ],
   "num_categories": 6,
-  "total_products": 38,
+  "total_products": 39,
   "certifications": [],
   "end_markets": [],
   "profile_url": "https://www.everythingrf.com/companies/2007/mmtron-inc"
@@ -49533,9 +49587,10 @@
    "Analog to Digital Converters",
    "Cables",
    "Digital to Analog Converters",
-   "Switches"
+   "Switches",
+   "Transistors"
   ],
-  "num_categories": 4,
+  "num_categories": 5,
   "total_products": 0,
   "certifications": [],
   "end_markets": [],
