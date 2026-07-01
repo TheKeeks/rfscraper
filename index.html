@@ -256,6 +256,7 @@
           <div class="scrollbox"><table id="tbl">
             <thead><tr>
               <th data-k="name">Company</th><th data-k="country">Country</th>
+              <th data-k="state" title="US state, canonicalized from the company address. Only US companies have a state; others show —.">State</th>
               <th data-k="num_categories" title="Number of product categories — the Specialist→Platform breadth band">Breadth</th>
               <th>Categories</th><th>Certs</th><th data-k="total_products">Products</th><th></th>
             </tr></thead><tbody id="tbody"></tbody>
@@ -2144,6 +2145,39 @@ const REGIONS = {
 };
 const regionOf = c => REGIONS[c] || "Rest of World";
 
+/* ---------------- US state canonicalization (NOT geocoding) ----------------
+   The scraper parses `state` from the company address, so the raw values are
+   messy: clean USPS codes ("CA"), full names ("California"), lowercase/punctuated
+   variants ("Ca", "CA."), but also ZIP codes, city names, street fragments and
+   junk. canonState() recognizes a value ONLY if it is already a US state written
+   one of two ways — a 2-letter USPS code, or the full state name — and returns the
+   USPS code. That is canonicalization of a value that is *already* a state, not
+   inference: a ZIP, a city ("San Jose") or anything unrecognized returns null and
+   renders as "—". We never map a city/ZIP/address to a state. State is associated
+   with a company ONLY when its country is United States. */
+const US_STATES = {
+ AL:"Alabama", AK:"Alaska", AZ:"Arizona", AR:"Arkansas", CA:"California", CO:"Colorado",
+ CT:"Connecticut", DE:"Delaware", FL:"Florida", GA:"Georgia", HI:"Hawaii", ID:"Idaho",
+ IL:"Illinois", IN:"Indiana", IA:"Iowa", KS:"Kansas", KY:"Kentucky", LA:"Louisiana",
+ ME:"Maine", MD:"Maryland", MA:"Massachusetts", MI:"Michigan", MN:"Minnesota", MS:"Mississippi",
+ MO:"Missouri", MT:"Montana", NE:"Nebraska", NV:"Nevada", NH:"New Hampshire", NJ:"New Jersey",
+ NM:"New Mexico", NY:"New York", NC:"North Carolina", ND:"North Dakota", OH:"Ohio", OK:"Oklahoma",
+ OR:"Oregon", PA:"Pennsylvania", RI:"Rhode Island", SC:"South Carolina", SD:"South Dakota",
+ TN:"Tennessee", TX:"Texas", UT:"Utah", VT:"Vermont", VA:"Virginia", WA:"Washington",
+ WV:"West Virginia", WI:"Wisconsin", WY:"Wyoming", DC:"District of Columbia",
+};
+const NAME_TO_CODE = Object.fromEntries(Object.entries(US_STATES).map(([k,v])=>[v.toLowerCase(),k]));
+function canonState(raw){
+  if(!raw) return null;
+  const t = String(raw).trim();
+  const m = t.match(/^([A-Za-z]{2})\.?$/);              // "CA", "Ca", "CA.", "Tx"
+  if(m && US_STATES[m[1].toUpperCase()]) return m[1].toUpperCase();
+  const key = t.toLowerCase().replace(/\.$/,"");        // "California", "New Jersey"
+  return NAME_TO_CODE[key] || null;
+}
+// Canonical US state code for a company, or "" — only for US companies, never inferred.
+const usState = d => ((d.country||"").trim()==="United States" ? (canonState(d.state)||"") : "");
+
 let DATA = [];
 const bandName = n => n<=2 ? "Specialist" : n<=6 ? "Focused" : n<=14 ? "Broadline" : "Platform";
 const bandColor = {Specialist:"var(--b1)", Focused:"var(--b2)", Broadline:"var(--b3)", Platform:"var(--b4)"};
@@ -2152,6 +2186,7 @@ const BANDS = ["Specialist","Focused","Broadline","Platform"];
 const state = {q:"", bands:new Set(), markets:new Set(),
                catGroups:new Set(), cats:new Set(),      // product area: broad groups + specific categories
                regions:new Set(), countries:new Set(),   // geography: regions + individual countries
+               states:new Set(),                          // US states drilled down under United States
                sortK:"num_categories", sortDir:-1, showAll:false};
 
 // Breadth = how many DISTINCT product categories a company spans — not how many
@@ -2246,13 +2281,18 @@ const escAttr = s => String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").repl
    categories) and Region (region -> countries). Checking a header selects the
    whole group; children are independently selectable for drill-down. Children
    beyond the first few sit behind a "Show all" toggle (task: no laundry lists). */
+// Records which selection Set each kid checkbox toggles, so a single tree can mix
+// kid kinds (e.g. the geography tree's US node lists states, other nodes list countries).
+const KID_SET = new WeakMap();
 function buildTree(elId, groups, selGroups, selKids){
   const KID_VISIBLE = 5;
   const el = document.getElementById(elId); el.innerHTML="";
   groups.forEach(g=>{
+    const kidSel = g.kidSel || selKids;
     const det=document.createElement("details"); det.className="tnode";
-    const kids=g.kids.map(([k,n],i)=>
-      `<label class="check"${i>=KID_VISIBLE?" hidden":""}><input type="checkbox" data-kid="${escAttr(k)}">`+
+    const kids=g.kids.map(([k,n,title],i)=>
+      `<label class="check"${i>=KID_VISIBLE?" hidden":""}${title?` title="${escAttr(title)}"`:""}>`+
+      `<input type="checkbox" data-kid="${escAttr(k)}">`+
       `<span>${k||"—"}</span><span class="n mono">${n}</span></label>`).join("");
     const more=g.kids.length>KID_VISIBLE?`<button type="button" class="more">Show all ${g.kids.length}</button>`:"";
     det.innerHTML=`<summary><input type="checkbox" data-group="${escAttr(g.label)}">`+
@@ -2262,8 +2302,9 @@ function buildTree(elId, groups, selGroups, selKids){
     gcb.addEventListener("click", e=>e.stopPropagation());   // don't toggle open/closed
     gcb.addEventListener("change", e=>{ e.target.checked?selGroups.add(g.label):selGroups.delete(g.label); render(); });
     det.querySelectorAll(".tkids input").forEach(cb=>{
+      KID_SET.set(cb, kidSel);
       cb.addEventListener("change", e=>{ const v=cb.dataset.kid;
-        e.target.checked?selKids.add(v):selKids.delete(v);
+        e.target.checked?kidSel.add(v):kidSel.delete(v);
         gcb.indeterminate = !gcb.checked && [...det.querySelectorAll(".tkids input")].some(c=>c.checked);
         render(); });
     });
@@ -2285,7 +2326,8 @@ function syncTrees(){
       gcb.checked = gs.has(gcb.dataset.group);
       let any=false;
       det.querySelectorAll(".tkids input").forEach(cb=>{
-        cb.checked = ks.has(cb.dataset.kid); if(cb.checked) any=true;
+        const sel = KID_SET.get(cb) || ks;
+        cb.checked = sel.has(cb.dataset.kid); if(cb.checked) any=true;
         if(cb.checked) cb.closest("label").hidden=false;
       });
       gcb.indeterminate = !gcb.checked && any;
@@ -2336,13 +2378,23 @@ function init(){
     kids:[...catCounts].filter(([c])=>groupOf(c)===g).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))})),
     state.catGroups, state.cats);
 
-  // Region tree: regions first, countries nested for drill-down.
-  const ctyCounts=new Map(), regCo=new Map();
+  // Region tree: regions first, drilled down for detail. Under United States the
+  // drill-down is US states (task); under every other region it is countries.
+  const ctyCounts=new Map(), regCo=new Map(), stCounts=new Map();
   DATA.forEach(d=>{ const cty=d.country||""; ctyCounts.set(cty,(ctyCounts.get(cty)||0)+1);
-    const r=regionOf(cty); regCo.set(r,(regCo.get(r)||0)+1); });
-  buildTree("f-region", REGION_ORDER.filter(r=>regCo.has(r)).map(r=>({label:r, count:regCo.get(r),
-    kids:[...ctyCounts].filter(([c])=>regionOf(c)===r).sort((a,b)=>b[1]-a[1]||(a[0]||"—").localeCompare(b[0]||"—"))})),
-    state.regions, state.countries);
+    const r=regionOf(cty); regCo.set(r,(regCo.get(r)||0)+1);
+    const s=usState(d); if(s) stCounts.set(s,(stCounts.get(s)||0)+1); });
+  buildTree("f-region", REGION_ORDER.filter(r=>regCo.has(r)).map(r=>{
+    if(r==="United States"){
+      // states from the data only, each with a company count, sorted by count.
+      return {label:r, count:regCo.get(r), kidSel:state.states,
+        kids:[...stCounts].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))
+               .map(([code,n])=>[code, n, US_STATES[code]])};
+    }
+    return {label:r, count:regCo.get(r),
+      kids:[...ctyCounts].filter(([c])=>regionOf(c)===r)
+             .sort((a,b)=>b[1]-a[1]||(a[0]||"—").localeCompare(b[0]||"—"))};
+  }), state.regions, state.countries);
 
   // breadth-band explainers on the static legend
   document.querySelectorAll(".legend [data-band]").forEach(s=> s.setAttribute("data-tip", BAND_TIPS[s.dataset.band]));
@@ -2350,7 +2402,7 @@ function init(){
   document.getElementById("q").addEventListener("input", e=>{ state.q=e.target.value.toLowerCase(); render(); });
   document.getElementById("clearall").addEventListener("click", reset);
   document.querySelectorAll("#tbl th[data-k]").forEach(th=> th.addEventListener("click", ()=>{
-    const k=th.dataset.k; if(state.sortK===k) state.sortDir*=-1; else {state.sortK=k; state.sortDir=(k==="name"||k==="country")?1:-1;}
+    const k=th.dataset.k; if(state.sortK===k) state.sortDir*=-1; else {state.sortK=k; state.sortDir=(k==="name"||k==="country"||k==="state")?1:-1;}
     render();
   }));
   document.querySelectorAll("nav.tabs button").forEach(b=> b.addEventListener("click", ()=>switchView(b.dataset.view)));
@@ -2365,7 +2417,7 @@ function init(){
 
 function reset(){
   state.q=""; state.bands.clear(); state.markets.clear();
-  state.catGroups.clear(); state.cats.clear(); state.regions.clear(); state.countries.clear();
+  state.catGroups.clear(); state.cats.clear(); state.regions.clear(); state.countries.clear(); state.states.clear();
   document.getElementById("q").value="";
   document.querySelectorAll(".rail input[type=checkbox]").forEach(c=>{c.checked=false; c.indeterminate=false;});
   render();
@@ -2375,9 +2427,11 @@ function filtered(){
   return DATA.filter(d=>{
     if(state.q && !d.name.toLowerCase().includes(state.q)) return false;
     if(state.bands.size && !state.bands.has(bandName(d.num_categories))) return false;
-    // geography: a company matches if its region OR its specific country is selected
-    if(state.regions.size || state.countries.size){
-      if(!(state.countries.has(d.country||"") || state.regions.has(regionOf(d.country||"")))) return false;
+    // geography: a company matches if any selected region, country, or US state applies.
+    // usState(d) is "" for non-US, so a state selection only ever matches US companies.
+    if(state.regions.size || state.countries.size || state.states.size){
+      if(!(state.regions.has(regionOf(d.country||"")) || state.countries.has(d.country||"")
+           || (state.states.size && state.states.has(usState(d))))) return false;
     }
     // product area: matches if any of its categories is selected, or sits in a selected group
     if(state.catGroups.size || state.cats.size){
@@ -2391,17 +2445,26 @@ function filtered(){
 function render(){
   const rows = filtered();
   renderSpectrum(rows);
-  rows.sort((a,b)=>{
-    let x=a[state.sortK], y=b[state.sortK];
-    if(typeof x==="string"){ return state.sortDir*x.localeCompare(y); }
-    return state.sortDir*((x||0)-(y||0));
-  });
+  if(state.sortK==="state"){
+    // US rows sort by state code; rows with no state (non-US or unrecognized) sink
+    // to the bottom in both directions rather than flooding the top with "—".
+    rows.sort((a,b)=>{ const sa=usState(a), sb=usState(b);
+      if(sa===sb) return a.name.localeCompare(b.name);
+      if(!sa) return 1; if(!sb) return -1;
+      return state.sortDir*sa.localeCompare(sb); });
+  } else {
+    rows.sort((a,b)=>{
+      let x=a[state.sortK], y=b[state.sortK];
+      if(typeof x==="string"){ return state.sortDir*x.localeCompare(y); }
+      return state.sortDir*((x||0)-(y||0));
+    });
+  }
   const tb = document.getElementById("tbody"); tb.innerHTML="";
   document.getElementById("result-n").textContent = rows.length + " of " + DATA.length + " shown";
   document.querySelectorAll("#tbl th").forEach(th=>th.classList.remove("sorted","asc"));
   const sortedTh = [...document.querySelectorAll("#tbl th[data-k]")].find(th=>th.dataset.k===state.sortK);
   if(sortedTh){ sortedTh.classList.add("sorted"); if(state.sortDir===1) sortedTh.classList.add("asc"); }
-  if(!rows.length){ tb.innerHTML='<tr><td colspan="7"><div class="empty">No companies match these filters. Reset to start over.</div></td></tr>'; return; }
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="8"><div class="empty">No companies match these filters. Reset to start over.</div></td></tr>'; return; }
   const shown = state.showAll ? rows : rows.slice(0, ROW_CAP);
   shown.forEach(d=>{
     const bn = bandName(d.num_categories);
@@ -2409,9 +2472,12 @@ function render(){
       + (d.categories.length>6 ? ` <span class="cats">+${d.categories.length-6}</span>` : "");
     const links = (d.profile_url?`<a href="${d.profile_url}" target="_blank" rel="noopener" title="everythingRF profile">profile ↗</a>`:"")
       + (d.website?`<a href="${d.website}" target="_blank" rel="noopener" title="${d.website}">site ↗</a>`:"");
+    const st = usState(d);
+    const stCell = st ? `<span title="${escAttr(US_STATES[st]||"")}">${st}</span>` : "—";
     const tr = document.createElement("tr");
     tr.innerHTML = `<td class="name"><a data-id="${d.id}">${d.name}</a></td>
       <td>${d.country||"—"}</td>
+      <td class="mono">${stCell}</td>
       <td><span class="badge" tabindex="0" data-tip="${escAttr(BAND_TIPS[bn])}" style="background:${bandColor[bn]}">${bn}<span class="bn">${d.num_categories}</span></span></td>
       <td class="cats">${cats||"—"}</td>
       <td class="cats">${d.certifications.join(", ")||"—"}</td>
@@ -2422,7 +2488,7 @@ function render(){
   });
   if(rows.length > shown.length){
     const tr=document.createElement("tr");
-    tr.innerHTML=`<td colspan="7" style="padding:0"><button class="showall">Show all ${rows.length.toLocaleString()} rows (first ${ROW_CAP} shown)</button></td>`;
+    tr.innerHTML=`<td colspan="8" style="padding:0"><button class="showall">Show all ${rows.length.toLocaleString()} rows (first ${ROW_CAP} shown)</button></td>`;
     tr.querySelector("button").addEventListener("click", ()=>{ state.showAll=true; render(); });
     tb.appendChild(tr);
   }
@@ -2538,11 +2604,13 @@ function switchView(v){
 
 function downloadCSV(){
   const rows=filtered();
-  const cols=["name","country","num_categories","categories","certifications","end_markets","total_products","website","profile_url"];
-  const head=["Company","Country","Num_Categories","Categories","Certifications","End_Markets","Total_Products","Website","Profile_URL"];
+  const cols=["name","country","state","num_categories","categories","certifications","end_markets","total_products","website","profile_url"];
+  const head=["Company","Country","State","Num_Categories","Categories","Certifications","End_Markets","Total_Products","Website","Profile_URL"];
   const esc=v=>`"${String(v).replace(/"/g,'""')}"`;
   const lines=[head.join(",")].concat(rows.map(d=> cols.map(c=>{
-    let v=d[c]; if(Array.isArray(v)) v=v.join("; "); return esc(v??"");
+    // State column mirrors the UI: canonical US state code, blank for non-US/unrecognized.
+    let v = c==="state" ? usState(d) : d[c];
+    if(Array.isArray(v)) v=v.join("; "); return esc(v??"");
   }).join(",")));
   const blob=new Blob([lines.join("\n")],{type:"text/csv"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
